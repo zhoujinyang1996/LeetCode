@@ -3397,21 +3397,377 @@ bool search2(vector<int>& nums, int target) {
 }
 
 ListNode* deleteDuplicates(ListNode* head) {
+	if (head == NULL)
+	{
+		return NULL;
+	}
+	ListNode* last = NULL;
+	ListNode* pre = head;
+	ListNode* cur = head->next;
+	if (cur == NULL)
+	{
+		return head;
+	}
+	int preVal = head->val;
+	while (cur != NULL)
+	{
+		if (cur->val == preVal)
+		{
+			//找到第一个与之前数字不同的节点
+			while (cur != NULL && cur->val == preVal)
+			{
+				cur = cur->next;
+			}
+			if (cur == NULL)
+			{
+				if (last!=NULL)
+				{
+					last->next = NULL;
+					return head;
+				}
+				return NULL;
+			}
+			preVal = cur->val;
+			pre = cur;
+			cur = cur->next;
+			continue;
+		}
+		else
+		{
+			if (last == NULL)
+			{
+				head = pre;
+			}
+			else
+			{
+				last->next = pre;
+			}
+			last = pre;
+			pre = cur;
+			preVal = pre->val;
+			cur = cur->next;
+		}
+	}
+	if (last != NULL)
+	{
+		last->next = pre;
+		return head;
+	}
+	return pre;
+}
 
+ListNode* deleteDuplicates2(ListNode* head) {
+	if (head == NULL)
+	{
+		return NULL;
+	}
+	int preVal = head->val;
+	ListNode* pre = head;
+	ListNode* cur = head->next;
+	while (cur != NULL)
+	{
+		if (cur->val == preVal)
+		{
+			pre->next = cur->next;
+		}
+		else
+		{
+			pre = cur;
+			preVal = cur->val;
+		}
+		cur = cur->next;
+	}
+	return head;
+}
+
+int largestRectangleArea(vector<int>& heights) {
+	int size = heights.size();
+	if (size == 0)
+	{
+		return 0;
+	}
+	int result = heights[0];
+	vector<int> found;
+	for(int k = 0; k < size; k++)
+	{
+		int i = heights[k];
+		auto it = find(found.begin(), found.end(), i);
+		if (it != found.end())
+		{
+			continue;
+		}
+		found.push_back(i);
+		int left = -1;
+		int right = -1;
+		for (int j = 0; j < size; j++)
+		{
+			if (heights[j] >= i)
+			{
+				if (left < 0)
+				{
+					left = j;
+				}
+				right = j;
+			}
+			else
+			{
+				if (right >= 0)
+				{
+					int tmp = (right - left + 1)*i;
+					result = tmp > result ? tmp : result;
+					left = -1;
+					right = -1;
+				}
+			}
+		}
+		if (right > 0)
+		{
+			int tmp = (right - left + 1)*i;
+			result = tmp > result ? tmp : result;
+		}
+	}
+	return result;
+}
+
+int maximalRectangle(vector<vector<char>>& matrix) {
+	int sizeX = matrix.size();
+	if (sizeX == 0)
+	{
+		return 0;
+	}
+	int sizeY = matrix[0].size();
+	for (int i = 0; i < sizeX; i++)
+	{
+		for (int j = 0; j < sizeY; j++)
+		{
+			if (matrix[i][j] == '1'&&j != 0)
+			{
+				matrix[i][j] = matrix[i][j - 1] + 1;
+			}
+		}
+	}
+	int result = 0;
+	for (int i = 0; i < sizeX; i++)
+	{
+		for (int j = 0; j < sizeY; j++)
+		{
+			if (matrix[i][j] >= '1')
+			{
+				int min = matrix[i][j];
+				for (int k = i; k >= 0; k--)
+				{
+					min = matrix[k][j] < min ? matrix[k][j] : min;
+					int tmp = (min - '0') * (i - k + 1);
+					result = result > tmp ? result : tmp;
+				}
+			}
+		}
+	}
+	return result;
+}
+
+ListNode* partition(ListNode* head, int x) {
+	ListNode* firstSmall = NULL;
+	ListNode* lastSmall = NULL;
+	ListNode* firstBig = NULL;
+	ListNode* lastBig = NULL;
+	ListNode* cur = head;
+	while (cur != NULL)
+	{
+		if (cur->val < x)
+		{
+			if (lastSmall == NULL)
+			{
+				firstSmall = cur;
+				lastSmall = cur;
+				cur = cur->next;
+				lastSmall->next = firstBig;
+			}
+			else
+			{
+				lastSmall->next = cur;
+				lastSmall = cur;
+				cur = cur->next;
+				lastSmall->next = firstBig;
+			}
+		}
+		else
+		{
+			if (lastBig == NULL)
+			{
+				firstBig = cur;
+				if (lastSmall != NULL)
+				{
+					lastSmall->next = firstBig;
+				}
+				lastBig = cur;
+			}
+			else
+			{
+				lastBig->next = cur;
+				lastBig = cur;
+			}
+			cur = cur->next;
+			lastBig->next = NULL;
+		}
+	}
+	if (firstSmall != NULL)
+	{
+		return firstSmall;
+	}
+	return head;
+}
+
+bool isScramble(string s1, string s2) {
+	if (s1 == s2)
+	{
+		return true;
+	}
+	int size1 = s1.size();
+	int size2 = s2.size();
+	if (size1 != size2) 
+	{
+		return false;
+	}
+	string ss1(s1);
+	string ss2(s2);
+	sort(ss1.begin(), ss1.end());
+	sort(ss2.begin(), ss2.end());
+	if (ss1 != ss2) {
+		return false;
+	}
+	for (int i = 1; i < size1; i++)
+	{
+		if(isScramble(s1.substr(0,i),s2.substr(0,i))&&
+			isScramble(s1.substr(i), s2.substr(i)))
+		{
+			return true;
+		}
+		if (isScramble(s1.substr(0, i), s2.substr(size2 - i)) &&
+			isScramble(s1.substr(i), s2.substr(0, size2 - i)))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void merge(vector<int>& nums1, int m, vector<int>& nums2, int n) {
+	if (n == 0)
+	{
+		return;
+	}
+	for (int i = 0; i < m; i++)
+	{
+		if (nums1[i] > nums2[0])
+		{
+			int tmp = nums2[0];
+			nums2[0] = nums1[i];
+			nums1[i] = tmp;
+			for (int j = 1; j < n; j++)
+			{
+				if (nums2[j] < nums2[j - 1])
+				{
+					int tmp2 = nums2[j];
+					nums2[j] = nums2[j - 1];
+					nums2[j - 1] = tmp2;
+				}
+				else
+				{
+					break;
+				}
+			}
+		}
+	}
+	for (int i = m; i < n + m; i++)
+	{
+		nums1[i] = nums2[i - m];
+	}
+}
+
+vector<int> grayCode(int n) {
+	vector<int> res;
+	res.push_back(0);
+	if (n == 0)
+	{
+		return res;
+	}
+	int tmp = 1;
+	while (n > 0)
+	{
+		for (int i = res.size() - 1; i >= 0; i--)
+		{
+			res.push_back(res[i] + tmp);
+		}
+		n--;
+		tmp *= 2;
+	}
+	return res;
+}
+
+void diguiSubsetsWithDup(vector<vector<int>> &result, vector<int> &nums, int i, vector<int> cur, int &size)
+{
+	if (i == size - 1)
+	{
+		return;
+	}
+	int pre = nums[i+1];
+	cur.push_back(pre);
+	result.push_back(cur);
+	diguiSubsetsWithDup(result, nums, i + 1, cur, size);
+	cur.pop_back();
+	for (int j = i + 2; j < size; j++)
+	{
+		if (nums[j] != pre)
+		{
+			cur.push_back(nums[j]);
+			result.push_back(cur);
+			diguiSubsetsWithDup(result, nums, j, cur, size);
+			cur.pop_back();
+			pre = nums[j];
+		}
+	}
+}
+vector<vector<int>> subsetsWithDup(vector<int>& nums) {
+	vector<vector<int>> result;
+	result.push_back({});
+	int size = nums.size();
+	if (size == 0)
+	{
+		return result;
+	}
+	sort(nums.begin(), nums.end());
+	int pre = nums[0];
+	result.push_back({ pre });
+	diguiSubsetsWithDup(result, nums, 0, { pre }, size);
+	for (int i = 1; i < nums.size(); i++)
+	{
+		if (nums[i] != pre)
+		{
+			result.push_back({ nums[i] });
+			diguiSubsetsWithDup(result, nums, i, { nums[i] }, size);
+			pre = nums[i];
+		}
+	}
+	return result;
 }
 
 int main()
 {
-	ListNode* n1 = new ListNode(1);
-	ListNode* n2 = new ListNode(2);
+	ListNode* n1 = new ListNode(2);
+	ListNode* n2 = new ListNode(1);
 	ListNode* n3 = new ListNode(3);
-	ListNode* n4 = new ListNode(4);
+	ListNode* n4 = new ListNode(2);
 	ListNode* n5 = new ListNode(5);
-	//ListNode* n6 = new ListNode(4);
+	ListNode* n6 = new ListNode(2);
+	ListNode* n7 = new ListNode(2);
+
 	n1->next = n2;
-	n2->next = n3;
+	//n2->next = n3;
 	n3->next = n4;
 	n4->next = n5;
+	n5->next = n6;
+	//n6->next = n7;
 	vector<vector<char>> v = { {'5', '3', '.', '.', '7', '.', '.', '.', '.'},
 		{'6', '.', '.', '1', '9', '5', '.', '.', '.'},
 		{'.', '9', '8', '.', '.', '.', '.', '6', '.'},
@@ -3426,11 +3782,12 @@ int main()
 	vector<string> v2 = { "ask","not","what","your","country","can","do","for","you","ask","what","you","can","do","for","your","country" };
 	//vector<vector<bool>> v3(3, vector<bool>(3));
 	//double result = myPow(8.84372, -5);
-	vector<vector<char>> v3 = { {'A','B','C','D'},{'E','F','G','H'},{'I','J','K','L'} };
-	string s1 = "horse";
-	string s2 = "ros";
-	vector<int> v4 = { 2,5,6,0,0,1,2 };
-	bool result = search2(v4,2);
+	vector<vector<char>> v3 = { {'1','0','1','0','0'},{'1','0','1','1','1'},{'1','1','1','1','1'},{'1','0','0','1','0'} };
+	string s1 = "abb";
+	string s2 = "bba";
+	vector<int> v4 = { 4,5,6,0,0,0 };
+	vector<int> v5 = { 2,2,2,3 };
+	vector<vector<int>> result = subsetsWithDup(v5);
     std::cout << "Hello World!\n"; 
 }
 
