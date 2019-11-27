@@ -17,6 +17,13 @@ struct ListNode {
 	ListNode(int x) : val(x), next(NULL) {}	
 };
 
+struct TreeNode {
+	int val;
+	TreeNode *left;
+	TreeNode *right;
+	TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+};
+
 double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
 	if (nums1.size() <= nums2.size())
 	{
@@ -3752,22 +3759,478 @@ vector<vector<int>> subsetsWithDup(vector<int>& nums) {
 	return result;
 }
 
+int numDecodings(string s) {
+	int size = s.size();
+	if (size == 0)
+	{
+		return 1;
+	}
+	if (s[0] == '0')
+	{
+		return 0;
+	}
+	if (size == 1)
+	{
+		return 1;
+	}
+	int result = 0;
+	if (s[0] > '2')
+	{
+		result += numDecodings(s.substr(1));
+	}
+	else if (s[0] == '2')
+	{
+		if (s[1] <= '6')
+		{
+			result += numDecodings(s.substr(2));
+			result += numDecodings(s.substr(1));
+		}
+		else
+		{
+			result += numDecodings(s.substr(1));
+		}
+	}
+	else
+	{
+		result += numDecodings(s.substr(2));
+		result += numDecodings(s.substr(1));
+	}
+	return result;
+}
+
+ListNode* reverseBetween(ListNode* head, int m, int n) {
+	ListNode* pre = NULL;
+	ListNode* cur = head;
+	while (cur != NULL && m > 1)
+	{
+		pre = cur;
+		cur = cur->next;
+		m--;
+		n--;
+	}
+	ListNode* ppre = pre;
+	pre = cur;
+	cur = cur->next;
+	while (cur != NULL && n > 1)
+	{
+		ListNode* tmp = cur->next;
+		cur->next = pre;
+		pre = cur;
+		cur = tmp;
+		n--;
+	}
+	if (ppre != NULL)
+	{
+		ppre->next->next = cur;
+		ppre->next = pre;
+	}
+	else
+	{
+		head->next = cur;
+		head = pre;
+
+	}
+	return head;
+}
+
+void diguiRestoreIpAddresses(string s, int pntNum, string tmp, vector<string> &result)
+{
+	int size = s.size();
+	if (size < pntNum + 1)
+	{
+		return;
+	}
+	if (pntNum == 0)
+	{
+		if (size > 3 || size > 1 && s[0] == '0')
+		{
+			return;
+		}
+		if (size == 3)
+		{
+			if (s[0] > '2' || (s[0] == '2'&&s[1] > '5') || (s[0] == '2'&&s[1] == '5'&&s[2] > '5'))
+			{
+				return;
+			}
+		}
+		tmp = tmp + "." + s;
+		result.push_back(tmp);
+		return;
+	}
+	if (s[0] == '0')
+	{
+		if (size - 1 <= 3 * pntNum)
+		{
+			tmp = tmp + "." + s.substr(0, 1);
+			diguiRestoreIpAddresses(s.substr(1), pntNum - 1, tmp, result);
+		}
+		return;
+	}
+	if (size - 1 <= 3 * pntNum&&size > 1)
+	{
+		string tmp1 = tmp + "." + s.substr(0, 1);
+		diguiRestoreIpAddresses(s.substr(1), pntNum - 1, tmp1, result);
+	}
+	if (size - 2 <= 3 * pntNum&&size > 2)
+	{
+		string tmp1 = tmp + "." + s.substr(0, 2);
+		diguiRestoreIpAddresses(s.substr(2), pntNum - 1, tmp1, result);
+	}
+	if (size - 3 <= 3 * pntNum&&size > 3)
+	{
+		if (s[0] < '2' || (s[0] == '2'&&s[1] < '5') || (s[0] == '2'&&s[1] == '5'&&s[2] <= '5'))
+		{
+			string tmp1 = tmp + "." + s.substr(0, 3);
+			diguiRestoreIpAddresses(s.substr(3), pntNum - 1, tmp1, result);
+		}
+	}
+}
+vector<string> restoreIpAddresses(string s) {
+	vector<string> result;
+	int size = s.size();
+	if (size < 4)
+	{
+		return result;
+	}
+	if (s[0] == '0')
+	{
+		if (size - 1 < 9)
+		{
+			diguiRestoreIpAddresses(s.substr(1), 2, s.substr(0, 1), result);
+		}
+		return result;
+	}
+	if (size - 1 <= 9)
+	{
+		diguiRestoreIpAddresses(s.substr(1), 2, s.substr(0, 1), result);
+	}
+	if (size - 2 <= 9)
+	{
+		diguiRestoreIpAddresses(s.substr(2), 2, s.substr(0, 2), result);
+	}
+	if (size - 3 <= 9)
+	{
+		if (s[0] < '2' || (s[0] == '2'&&s[1] < '5') || (s[0] == '2'&&s[1] == '5'&&s[2] <= '5'))
+		{
+			diguiRestoreIpAddresses(s.substr(3), 2, s.substr(0, 3), result);
+		}
+	}
+	return result;
+}
+
+void diguiInorderTraversal(TreeNode* root, vector<int>& res)
+{
+	if (root->left != NULL)
+	{
+		diguiInorderTraversal(root->left, res);
+	}
+	res.push_back(root->val);
+	if (root->right != NULL)
+	{
+		diguiInorderTraversal(root->right, res);
+	}
+}
+vector<int> inorderTraversal(TreeNode* root) {
+	vector<int> result;
+	if (root == NULL)
+	{
+		return result;
+	}
+	diguiInorderTraversal(root, result);
+	return result;
+}
+
+vector<TreeNode*> diedaiGenerateTrees(int start, int end)
+{
+	vector<TreeNode*> res;
+	if (end < start)
+	{
+		res.push_back(nullptr);
+		return res;
+	}
+	for (int i = start; i <= end; i++)
+	{
+		vector<TreeNode*> left = diedaiGenerateTrees(start, i-1);
+		vector<TreeNode*> right = diedaiGenerateTrees(i + 1, end);
+		for (auto it = left.begin(); it != left.end(); it++)
+		{
+			for (auto it1 = right.begin(); it1 != right.end(); it1++)
+			{
+				TreeNode* root = new TreeNode(i);
+				root->right = *it1;
+				root->left = *it;
+				res.push_back(root);
+			}
+		}
+	}
+	return res;
+}
+vector<TreeNode*> generateTrees(int n) {
+	vector<TreeNode*> res;
+	if (n == 0)
+	{
+		return res;
+	}
+	res = diedaiGenerateTrees(1, n);
+	return res;
+}
+
+int numTrees(int n) {
+	vector<int> dp(n + 1, 0);
+	dp[0] = 1;
+	dp[1] = 1;
+
+	for (int i = 2; i <= n; i++)
+	{
+		int tmp = (i - 1) / 2;
+		if ((i - 1) % 2)
+		{
+			for (int j = 0; j <= tmp; j++)
+			{
+				dp[i] += dp[j] * dp[i - j - 1] * 2;
+			}
+		}
+		else
+		{
+			for (int j = 0; j < tmp; j++)
+			{
+				dp[i] += dp[j] * dp[i - j - 1] * 2;
+			}
+			dp[i] += dp[tmp] * dp[tmp];
+		}
+	}
+	return dp[n];
+
+	//if (n == 0 || n == 1)
+	//{
+	//	return 1;
+	//}
+	//int res = 0;
+	//for (int i = 1; i <= n; i++)
+	//{
+	//	res += numTrees(i - 1)*numTrees(n - i);
+	//}
+	//return res;
+}
+
+bool isInterleave(string s1, string s2, string s3) {
+	int N1 = s1.size();
+	int N2 = s2.size();
+	int N3 = s3.size();
+	if (N1 + N2 != N3) return false;
+	vector<vector<bool> > dp(N1 + 1, vector<bool>(N2 + 1, false));
+	dp[0][0] = true;
+	for (int i = 0; i <= N1; ++i) 
+	{
+		for (int j = 0; j <= N2; ++j) 
+		{
+			if (i > 0 && s1[i - 1] == s3[i + j - 1]) 
+			{
+				dp[i][j] = dp[i][j] || dp[i - 1][j];
+			}
+			if (j > 0 && s2[j - 1] == s3[i + j - 1]) 
+			{
+				dp[i][j] = dp[i][j] || dp[i][j - 1];
+			}
+		}
+	}
+	return dp[N1][N2];
+
+	/*int size1 = s1.size();
+	int size2 = s2.size();
+	int size3 = s3.size();
+	if (size1 + size2 != size3)
+	{
+		return false;
+	}
+	int i1 = 0; 
+	int i2 = 0;
+	for (int i = 0; i < size3; i++)
+	{
+		if (s3[i] == s1[i1])
+		{
+			if (s3[i] == s2[i2])
+			{
+				return isInterleave(s1.substr(i1 + 1), s2.substr(i2), s3.substr(i + 1))|| 
+					isInterleave(s1.substr(i1), s2.substr(i2 + 1), s3.substr(i + 1));
+			}
+			else
+			{
+				i1++;
+			}
+		}
+		else
+		{
+			if (s3[i] == s2[i2])
+			{
+				i2++;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+	return true;*/
+}
+
+bool diedaiIsValidBST(TreeNode* root, int max, int min, bool b1, bool b2)
+{
+	if (root == NULL)
+	{
+		return true;
+	}
+	if ((b1 && root->val >= max) || (b2 && root->val <= min))
+	{
+		return false;
+	}
+	if (root->left != NULL)
+	{
+		if (!diedaiIsValidBST(root->left, root->val, min, true, b2))
+		{
+			return false;
+		}
+	}
+	if (root->right != NULL)
+	{
+		if (!diedaiIsValidBST(root->right, max, root->val, b1, true))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+bool isValidBST(TreeNode* root) {
+	if (root == NULL)
+	{
+		return true;
+	}
+	if (root->left != NULL)
+	{
+		if (!diedaiIsValidBST(root->left, root->val, INT_MIN, true, false))
+		{
+			return false;
+		}
+	}
+	if (root->right != NULL)
+	{
+		if (!diedaiIsValidBST(root->right, INT_MAX, root->val, false, true))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void recoverTree(TreeNode* root) {
+	TreeNode* first = NULL;
+	TreeNode* second = NULL;
+	TreeNode* pre = NULL;
+	TreeNode* curr = root;
+	TreeNode* tmp = NULL;
+	while (curr != NULL) 
+	{
+		if (curr->left == NULL) 
+		{     //左子树为空
+			if ((pre != NULL) && (pre->val > curr->val)) 
+			{//如果有前驱且前驱的值大于当前结点的值,说明顺序反了,存在错误结点
+				if (first == NULL) 
+				{  //如果是第一次发现,则将first置为前驱,second置为当前结点
+					first = pre;
+					second = curr;
+				}
+				else 
+				{              //如果不是第一次发现,说明存在两个不相邻位置的交换,将second改为后者
+					second = curr;
+				}
+			}
+			pre = curr;             //如果没有前驱或者前驱的值小于当前值,属于正常情况,则继续遍历
+			curr = curr->right;
+		}
+		else 
+		{
+			tmp = curr->left;
+			while ((tmp->right != NULL) && (tmp->right != curr)) 
+			{
+				tmp = tmp->right;
+			}
+			if (tmp->right == NULL) 
+			{
+				tmp->right = curr;
+				curr = curr->left;
+			}
+			else 
+			{
+				tmp->right = NULL;//恢复树的形状
+				if ((pre != NULL) && (pre->val > curr->val)) 
+				{//判断逻辑与上面的相同
+					if (first == NULL) 
+					{
+						first = pre;
+						second = curr;
+					}
+					else 
+					{
+						second = curr;
+					}
+				}
+				pre = curr;
+				curr = curr->right;
+			}
+		}
+	}
+	int itmp = first->val;
+	first->val = second->val;
+	second->val = itmp;
+}
+
+bool isSameTree(TreeNode* p, TreeNode* q) {
+	if (p == NULL || q == NULL)
+	{
+		return p == q;
+	}
+	if (p->val != q->val)
+	{
+		return false;
+	}
+	if (!isSameTree(p->left, q->left))
+	{
+		return false;
+	}
+	if (!isSameTree(p->right, q->right))
+	{
+		return false;
+	}
+	return true;
+}
+
 int main()
 {
-	ListNode* n1 = new ListNode(2);
-	ListNode* n2 = new ListNode(1);
+	ListNode* n1 = new ListNode(1);
+	ListNode* n2 = new ListNode(2);
 	ListNode* n3 = new ListNode(3);
-	ListNode* n4 = new ListNode(2);
+	ListNode* n4 = new ListNode(4);
 	ListNode* n5 = new ListNode(5);
-	ListNode* n6 = new ListNode(2);
-	ListNode* n7 = new ListNode(2);
+	ListNode* n6 = new ListNode(6);
+	ListNode* n7 = new ListNode(7);
 
-	n1->next = n2;
+	//n1->next = n2;
 	//n2->next = n3;
 	n3->next = n4;
 	n4->next = n5;
-	n5->next = n6;
+	//n5->next = n6;
 	//n6->next = n7;
+
+	TreeNode* t1 = new TreeNode(2);
+	TreeNode* t2 = new TreeNode(3);
+	TreeNode* t3 = new TreeNode(1);
+	TreeNode* t4 = new TreeNode(2);
+	TreeNode* t5 = new TreeNode(20);
+	t1->left = t2;
+	t1->right = t3;
+	//t3->left = t4;
+	//t3->right = t5;
+
 	vector<vector<char>> v = { {'5', '3', '.', '.', '7', '.', '.', '.', '.'},
 		{'6', '.', '.', '1', '9', '5', '.', '.', '.'},
 		{'.', '9', '8', '.', '.', '.', '.', '6', '.'},
@@ -3783,11 +4246,12 @@ int main()
 	//vector<vector<bool>> v3(3, vector<bool>(3));
 	//double result = myPow(8.84372, -5);
 	vector<vector<char>> v3 = { {'1','0','1','0','0'},{'1','0','1','1','1'},{'1','1','1','1','1'},{'1','0','0','1','0'} };
-	string s1 = "abb";
-	string s2 = "bba";
+	string s1 = "bbbbbabbbbabaababaaaabbababbaaabbabbaaabaaaaababbbababbbbbabbbbababbabaabababbbaabababababbbaaababaa";
+	string s2 = "babaaaabbababbbabbbbaabaabbaabbbbaabaaabaababaaaabaaabbaaabaaaabaabaabbbbbbbbbbbabaaabbababbabbabaab";
+	string s3 = "babbbabbbaaabbababbbbababaabbabaabaaabbbbabbbaaabbbaaaaabbbbaabbaaabababbaaaaaabababbababaababbababbbababbbbaaaabaabbabbaaaaabbabbaaaabbbaabaaabaababaababbaaabbbbbabbbbaabbabaabbbbabaaabbababbabbabbab";
 	vector<int> v4 = { 4,5,6,0,0,0 };
 	vector<int> v5 = { 2,2,2,3 };
-	vector<vector<int>> result = subsetsWithDup(v5);
+	recoverTree(t1);
     std::cout << "Hello World!\n"; 
 }
 
