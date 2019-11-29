@@ -24,6 +24,21 @@ struct TreeNode {
 	TreeNode(int x) : val(x), left(NULL), right(NULL) {}
 };
 
+class Node {
+public:
+	int val;
+	Node* left;
+	Node* right;
+	Node* next;
+
+	Node() : val(0), left(NULL), right(NULL), next(NULL) {}
+
+	Node(int _val) : val(_val), left(NULL), right(NULL), next(NULL) {}
+
+	Node(int _val, Node* _left, Node* _right, Node* _next)
+		: val(_val), left(_left), right(_right), next(_next) {}
+};
+
 double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
 	if (nums1.size() <= nums2.size())
 	{
@@ -4204,6 +4219,689 @@ bool isSameTree(TreeNode* p, TreeNode* q) {
 	return true;
 }
 
+bool diguiIsSymmetric(TreeNode* left, TreeNode* right)
+{
+	if (left == NULL || right == NULL)
+	{
+		return left == right;
+	}
+	if (left->val != right->val)
+	{
+		return false;
+	}
+	return diguiIsSymmetric(left->right, right->left) && diguiIsSymmetric(left->left, right->right);
+}
+bool isSymmetric(TreeNode* root) {
+	if (root == NULL)
+	{
+		return true;
+	}
+	return diguiIsSymmetric(root->left, root->right);
+}
+
+vector<vector<int>> levelOrder(TreeNode* root) {
+	vector<vector<int>> res;
+	if (root == NULL)
+	{
+		return res;
+	}
+	vector<TreeNode*> tmp;
+	tmp.push_back(root);
+	while (!tmp.empty())
+	{
+		vector<TreeNode*> tt;
+		vector<int> line;
+		for (auto it = tmp.begin(); it != tmp.end(); it++)
+		{
+			line.push_back((*it)->val);
+			if ((*it)->left != NULL)
+			{
+				tt.push_back((*it)->left);
+			}
+			if ((*it)->right != NULL)
+			{
+				tt.push_back((*it)->right);
+			}
+		}
+		res.push_back(line);
+		tmp = tt;
+	}
+	return res;
+}
+
+vector<vector<int>> zigzagLevelOrder(TreeNode* root) {
+	vector<vector<int>> res;
+	if (root == NULL)
+	{
+		return res;
+	}
+	vector<TreeNode*> tmp;
+	tmp.push_back(root);
+	bool flag = true;
+	while (!tmp.empty())
+	{
+		vector<TreeNode*> tt;
+		vector<int> line;
+		if (flag)
+		{
+			for (auto it = tmp.rbegin(); it != tmp.rend(); it++)
+			{
+				line.push_back((*it)->val);
+				if ((*it)->left != NULL)
+				{
+					tt.push_back((*it)->left);
+				}
+				if ((*it)->right != NULL)
+				{
+					tt.push_back((*it)->right);
+				}
+			}
+			flag = false;
+		}
+		else
+		{
+			for (auto it = tmp.rbegin(); it != tmp.rend(); it++)
+			{
+				line.push_back((*it)->val);
+				if ((*it)->right != NULL)
+				{
+					tt.push_back((*it)->right);
+				}
+				if ((*it)->left != NULL)
+				{
+					tt.push_back((*it)->left);
+				}
+			}
+			flag = true;
+		}
+		res.push_back(line);
+		tmp = tt;
+	}
+	return res;
+}
+
+int maxDepth(TreeNode* root) {
+	int res = 0;
+	if (root == NULL)
+	{
+		return res;
+	}
+	vector<TreeNode*> tmp;
+	tmp.push_back(root);
+	while (!tmp.empty())
+	{
+		vector<TreeNode*> tt;
+		for (auto it = tmp.begin(); it != tmp.end(); it++)
+		{
+			if ((*it)->left != NULL)
+			{
+				tt.push_back((*it)->left);
+			}
+			if ((*it)->right != NULL)
+			{
+				tt.push_back((*it)->right);
+			}
+		}
+		res++;
+		tmp = tt;
+	}
+	return res;
+}
+
+TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+	int size = preorder.size();
+	if (size == 0)
+	{
+		return NULL;
+	}
+	TreeNode* root = new TreeNode(preorder[0]);
+	for (int i = 0; i < size; i++)
+	{
+		if (inorder[i] == root->val)
+		{
+			if (i != 0)
+			{
+				vector<int> left(inorder.begin(), inorder.begin() + i);
+				vector<int> preLeft(preorder.begin() + 1, preorder.begin() + i+1);
+				root->left = buildTree(preLeft, left);
+			}
+			if (i + 1 != size)
+			{
+				vector<int> right(inorder.begin() + i + 1, inorder.end());
+				vector<int> preRight(preorder.begin() + i + 1, preorder.end());
+				root->right = buildTree(preRight, right);
+			}
+			break;
+		}
+	}
+	return root;
+}
+
+TreeNode* buildTree2(vector<int>& inorder, vector<int>& postorder) {
+	int size = inorder.size();
+	if (size == 0)
+	{
+		return NULL;
+	}
+	TreeNode* root = new TreeNode(postorder.back());
+	for (int i = 0; i < size; i++)
+	{
+		if (inorder[i] == root->val)
+		{
+			if (i != 0)
+			{
+				vector<int> left(inorder.begin(), inorder.begin() + i);
+				vector<int> postLeft(postorder.begin(), postorder.begin() + i);
+				root->left = buildTree2(left, postLeft);
+			}
+			if (i + 1 != size)
+			{
+				vector<int> right(inorder.begin() + i + 1, inorder.end());
+				vector<int> postRight(postorder.begin() + i, postorder.end() - 1);
+				root->right = buildTree2(right, postRight);
+			}
+			break;
+		}
+	}
+	return root;
+}
+
+vector<vector<int>> levelOrderBottom(TreeNode* root) {
+	vector<vector<int>> res;
+	if (root == NULL)
+	{
+		return res;
+	}
+	vector<TreeNode*> tmp;
+	tmp.push_back(root);
+	while (!tmp.empty())
+	{
+		vector<TreeNode*> tt;
+		vector<int> line;
+		for (auto it = tmp.begin(); it != tmp.end(); it++)
+		{
+			line.push_back((*it)->val);
+			if ((*it)->left != NULL)
+			{
+				tt.push_back((*it)->left);
+			}
+			if ((*it)->right != NULL)
+			{
+				tt.push_back((*it)->right);
+			}
+		}
+		res.push_back(line);
+		tmp = tt;
+	}
+	reverse(res.begin(), res.end());
+	return res;
+}
+
+TreeNode* sortedArrayToBST(vector<int>& nums) {
+	int size = nums.size();
+	if (size == 0)
+	{
+		return NULL;
+	}
+	int mid = size / 2;
+	TreeNode* root = new TreeNode(nums[mid]);
+	if (mid != 0)
+	{
+		vector<int> left(nums.begin(), nums.begin() + mid);
+		root->left = sortedArrayToBST(left);
+	}
+	if (mid + 1 != size)
+	{
+		vector<int> right(nums.begin() + mid + 1, nums.end());
+		root->right = sortedArrayToBST(right);
+	}
+	return root;
+}
+
+TreeNode* sortedListToBST(ListNode* head) {
+	if (head == NULL)
+	{
+		return NULL;
+	}
+	if (head->next == NULL)
+	{
+		return new TreeNode(head->val);
+	}
+	ListNode* slow = head;
+	ListNode* fast = head;
+	ListNode* pre = NULL;
+	while (fast != NULL && fast->next != NULL)
+	{
+		fast = fast->next->next;
+		pre = slow;
+		slow = slow->next;
+	}
+	pre->next = NULL;
+	TreeNode* root = new TreeNode(slow->val);
+	root->left = sortedListToBST(head);
+	root->right = sortedListToBST(slow->next);
+	return root;
+}
+
+int diguiIsBalanced(TreeNode* root)
+{
+	if (root == NULL)
+	{
+		return 0;
+	}
+	int left = diguiIsBalanced(root->left);
+	if (left == -1)
+	{
+		return -1;
+	}
+	int right = diguiIsBalanced(root->right);
+	if (right == -1)
+	{
+		return -1;
+	}
+	if (fabs(left - right) < 2)
+	{
+		return max(left, right) + 1;
+	}
+	else
+	{
+		return -1;
+	}
+}
+bool isBalanced(TreeNode* root) {
+	if (diguiIsBalanced(root) == -1)
+	{
+		return false;
+	}
+	return true;
+}
+
+int diguiMinDepth(TreeNode* root)
+{
+	if (root == NULL)
+	{
+		return 0;
+	}
+	if (root->left == NULL && root->right == NULL)
+	{
+		return 1;
+	}
+	if (root->left != NULL)
+	{
+		int left = diguiMinDepth(root->left) + 1;
+		if (root->right != NULL)
+		{
+			int right = diguiMinDepth(root->right) + 1;
+			return left < right ? left : right;
+		}
+		return left;
+	}
+	else
+	{
+		return diguiMinDepth(root->right) + 1;
+	}
+}
+int minDepth(TreeNode* root) {
+	return diguiMinDepth(root);
+}
+
+bool hasPathSum(TreeNode* root, int sum) {
+	if (root == NULL)
+	{
+		return false;
+	}
+	if (root->left == NULL && root->right == NULL)
+	{
+		if (sum == root->val)
+		{
+			return true;
+		}
+		return false;
+	}
+	sum = sum - root->val;
+	return hasPathSum(root->left, sum) || hasPathSum(root->right, sum);
+}
+
+void diguiPathSum(TreeNode* root, int sum, vector<int> tmp)
+{
+	sum = sum - root->val;
+	tmp.push_back(root->val);
+	if (root->left == NULL && root->right == NULL)
+	{
+		if (sum == 0)
+		{
+			result.push_back(tmp);
+		}
+		return;
+	}
+	if (root->left != NULL)
+	{
+		diguiPathSum(root->left, sum, tmp);
+	}
+	if (root->right != NULL)
+	{
+		diguiPathSum(root->right, sum, tmp);
+	}
+}
+vector<vector<int>> pathSum(TreeNode* root, int sum) {
+	if (root == NULL)
+	{
+		return result;
+	}
+	vector<int> tmp;
+	diguiPathSum(root, sum, tmp);
+	return result;
+}
+
+void flatten(TreeNode* root) {
+	while (root != NULL)
+	{
+		TreeNode* left = root->left;
+		if (left != NULL)
+		{
+			while (left->right != NULL)
+			{
+				left = left->right;
+			}
+			left->right = root->right;
+			root->right = root->left;
+			root->left = NULL;
+		}
+		root = root->right;
+	}
+}
+
+int numDistinct(string s, string t) {
+	int tSize = t.size();
+	int sSize = s.size();
+	if (tSize == 0)
+	{
+		return 0;
+	}
+	if (sSize == 0)
+	{
+		return 0;
+	}
+	vector<vector<long>> dp(tSize + 1, vector<long>(sSize + 1, 0));
+	// 初始化第一行
+	for (int j = 0; j <= sSize; ++j)
+	{
+		dp[0][j] = 1;
+	}
+	for (int i = 1; i <= tSize; i++)
+	{
+		for (int j = 1; j <= sSize; j++) 
+		{
+			// 是否相等都要加上前面的值
+			dp[i][j] = dp[i][j - 1];
+			// 相等时加上，上一个字符匹配得出的结果
+			if (s[j - 1] == t[i - 1]) dp[i][j] += dp[i - 1][j - 1];
+		}
+	}
+	return dp[tSize][sSize];
+}
+
+Node* connect(Node* root) {
+	//if (root == NULL || root->left == NULL)
+	//{
+	//	return root;
+	//}
+	//vector<Node*> tmp;
+	//tmp.push_back(root);
+	//while (!tmp.empty())
+	//{
+	//	int size = tmp.size();
+	//	Node* preNode = NULL;
+	//	vector<Node*> ttmp;
+	//	for (int i = 0; i < size; i++)
+	//	{
+	//		if (tmp[i]->left != NULL)
+	//		{
+	//			ttmp.push_back(tmp[i]->left);
+	//			ttmp.push_back(tmp[i]->right);
+	//		}
+	//		if (preNode != NULL)
+	//		{
+	//			preNode->next = tmp[i];
+	//		}
+	//		preNode = tmp[i];
+	//	}
+	//	tmp = ttmp;
+	//}
+	//return root;
+
+	//递归解法
+	if (root == NULL or root->left == NULL)
+		return root;
+	root->left->next = root->right;
+	if (root->next != NULL)
+		root->right->next = root->next->left;
+	connect(root->left);
+	connect(root->right);
+	return root;
+}
+
+Node* connect2(Node* root) {
+	if (root == NULL)
+	{
+		return NULL;
+	}
+	Node* cur = root;
+	Node* searchNode = NULL;
+	while (cur != NULL)
+	{
+		if (cur->left != NULL)
+		{
+			if (searchNode != NULL)
+			{
+				searchNode->next = cur->left;
+			}
+			searchNode = cur->left;
+		}
+		if (cur->right != NULL)
+		{
+			if (searchNode != NULL)
+			{
+				searchNode->next = cur->right;
+			}
+			searchNode = cur->right;
+		}
+		cur = cur->next;
+	}
+	cur = root;
+	while (cur != NULL)
+	{
+		if (cur->left != NULL)
+		{
+			connect2(cur->left);
+			break;
+		}
+		if (cur->right != NULL)
+		{
+			connect2(cur->right);
+			break;
+		}
+		cur = cur->next;
+	}
+	return root;
+}
+
+vector<vector<int>> generate(int numRows) {
+	vector<vector<int>> result;
+	if (numRows == 0)
+	{
+		return result;
+	}
+	vector<int> pre(1, 1);
+	result.push_back(pre);
+	for (int i = 1; i < numRows; i++)
+	{
+		int size = pre.size() - 1;
+		vector<int> tmp;
+		tmp.push_back(1);
+		int num = pre[0];
+		for (int j = 1; j <= size; j++)
+		{
+			tmp.push_back(num + pre[j]);
+			num = pre[j];
+		}
+		tmp.push_back(1);
+		pre = tmp;
+		result.push_back(tmp);
+	}
+	return result;
+}
+
+vector<int> getRow(int rowIndex) {
+	/*vector<int> result;
+	result.push_back(1);
+	if (rowIndex == 0)
+	{
+		return result;
+	}
+	for (int i = 1; i <= rowIndex; i++)
+	{
+		int size = result.size() - 1;
+		vector<int> tmp;
+		tmp.push_back(1);
+		int num = result[0];
+		for (int j = 1; j <= size; j++)
+		{
+			tmp.push_back(num + result[j]);
+			num = result[j];
+		}
+		tmp.push_back(1);
+		result = tmp;
+	}
+	return result;*/
+
+	vector<int> res(rowIndex + 1, 0);
+	res[0] = 1;
+	for (int i = 1; i < rowIndex + 1; i++)
+	{
+		for (int j = i; j >= 1; j--)
+			res[j] += res[j - 1];
+	}
+	return res;
+}
+
+int minimumTotal(vector<vector<int>>& triangle) {
+	int size = triangle.size();
+	if (size == 0)
+	{
+		return 0;
+	}
+	if (size == 1)
+	{
+		return triangle[0][0];
+	}
+	vector<int> tmp = triangle.back();
+	int pre = tmp[0];
+	for (int i = 1; i < size; i++)
+	{
+		if (pre < tmp[i])
+		{
+			triangle[size - 2][i - 1] += pre;
+		}
+		else
+		{
+			triangle[size - 2][i - 1] += tmp[i];
+		}
+		pre = tmp[i];
+	}
+	triangle.pop_back();
+	return minimumTotal(triangle);
+}
+
+int maxProfit(vector<int>& prices) {
+	int size = prices.size();
+	if (size == 0 || size == 1)
+	{
+		return 0;
+	}
+	int min = prices[0];
+	int maxProfit = 0;
+	for (int i = 1; i < size; i++)
+	{
+		if (prices[i] < min)
+		{
+			min = prices[i];
+		}
+		else
+		{
+			if (prices[i] - min > maxProfit)
+			{
+				maxProfit = prices[i] - min;
+			}
+		}
+	}
+	return maxProfit;
+}
+
+int maxProfit2(vector<int>& prices) {
+	//int size = prices.size();
+	//if (size == 0 || size == 1)
+	//{
+	//	return 0;
+	//}
+	//bool fall = true;
+	//int min = prices[0];
+	//int max = prices[0];
+	//int result = 0;
+	//for (int i = 1; i < size; i++)
+	//{
+	//	if (fall)
+	//	{
+	//		if (prices[i] < min)
+	//		{
+	//			min = prices[i];
+	//		}
+	//		else
+	//		{
+	//			fall = false;
+	//			max = prices[i];
+	//		}
+	//	}
+	//	else
+	//	{
+	//		if (prices[i] > max)
+	//		{
+	//			max = prices[i];
+	//		}
+	//		else
+	//		{
+	//			result += max - min;
+	//			min = prices[i];
+	//			fall = true;
+	//		}
+	//	}
+	//}
+	//if (!fall)
+	//{
+	//	result += max - min;
+	//}
+	//return result;
+
+	int size = prices.size();
+	if (size == 0 || size == 1)
+	{
+		return 0;
+	}
+	int pre = prices[0];
+	int result = 0;
+	for (int i = 1; i < size; i++)
+	{
+		if (prices[i] > pre)
+		{
+			result += prices[i] - pre;
+		}
+		pre = prices[i];
+	}
+	return result;
+}
+
+
+
 int main()
 {
 	ListNode* n1 = new ListNode(1);
@@ -4221,15 +4919,30 @@ int main()
 	//n5->next = n6;
 	//n6->next = n7;
 
-	TreeNode* t1 = new TreeNode(2);
-	TreeNode* t2 = new TreeNode(3);
-	TreeNode* t3 = new TreeNode(1);
-	TreeNode* t4 = new TreeNode(2);
-	TreeNode* t5 = new TreeNode(20);
+	Node* t1 = new Node(2);
+	Node* t2 = new Node(1);
+	Node* t3 = new Node(3);
+	Node* t4 = new Node(0);
+	Node* t5 = new Node(7);
+	Node* t6 = new Node(9);
+	Node* t7 = new Node(1);
+	Node* t8 = new Node(2);
+	Node* t9 = new Node(1);
+	Node* t10 = new Node(0);
+	Node* t11 = new Node(8);
+	Node* t12 = new Node(8);
 	t1->left = t2;
 	t1->right = t3;
-	//t3->left = t4;
-	//t3->right = t5;
+	t2->left = t4;
+	t2->right = t5;
+	t3->left = t6;
+	t3->right = t7;
+	t4->left = t8;
+	t5->left = t9;
+	t5->right = t10;
+	t7->left = t11;
+	t7->right = t12;
+
 
 	vector<vector<char>> v = { {'5', '3', '.', '.', '7', '.', '.', '.', '.'},
 		{'6', '.', '.', '1', '9', '5', '.', '.', '.'},
@@ -4246,12 +4959,12 @@ int main()
 	//vector<vector<bool>> v3(3, vector<bool>(3));
 	//double result = myPow(8.84372, -5);
 	vector<vector<char>> v3 = { {'1','0','1','0','0'},{'1','0','1','1','1'},{'1','1','1','1','1'},{'1','0','0','1','0'} };
-	string s1 = "bbbbbabbbbabaababaaaabbababbaaabbabbaaabaaaaababbbababbbbbabbbbababbabaabababbbaabababababbbaaababaa";
-	string s2 = "babaaaabbababbbabbbbaabaabbaabbbbaabaaabaababaaaabaaabbaaabaaaabaabaabbbbbbbbbbbabaaabbababbabbabaab";
+	string s1 = "xslledayhxhadmctrliaxqpokyezcfhzaskeykchkmhpyjipxtsuljkwkovmvelvwxzwieeuqnjozrfwmzsylcwvsthnxujvrkszqwtglewkycikdaiocglwzukwovsghkhyidevhbgffoqkpabthmqihcfxxzdejletqjoxmwftlxfcxgxgvpperwbqvhxgsbbkmphyomtbjzdjhcrcsggleiczpbfjcgtpycpmrjnckslrwduqlccqmgrdhxolfjafmsrfdghnatexyanldrdpxvvgujsztuffoymrfteholgonuaqndinadtumnuhkboyzaqguwqijwxxszngextfcozpetyownmyneehdwqmtpjloztswmzzdzqhuoxrblppqvyvsqhnhryvqsqogpnlqfulurexdtovqpqkfxxnqykgscxaskmksivoazlducanrqxynxlgvwonalpsyddqmaemcrrwvrjmjjnygyebwtqxehrclwsxzylbqexnxjcgspeynlbmetlkacnnbhmaizbadynajpibepbuacggxrqavfnwpcwxbzxfymhjcslghmajrirqzjqxpgtgisfjreqrqabssobbadmtmdknmakdigjqyqcruujlwmfoagrckdwyiglviyyrekjealvvigiesnvuumxgsveadrxlpwetioxibtdjblowblqvzpbrmhupyrdophjxvhgzclidzybajuxllacyhyphssvhcffxonysahvzhzbttyeeyiefhunbokiqrpqfcoxdxvefugapeevdoakxwzykmhbdytjbhigffkmbqmqxsoaiomgmmgwapzdosorcxxhejvgajyzdmzlcntqbapbpofdjtulstuzdrffafedufqwsknumcxbschdybosxkrabyfdejgyozwillcxpcaiehlelczioskqtptzaczobvyojdlyflilvwqgyrqmjaeepydrcchfyftjighntqzoo";
+	string s2 = "rwmimatmhydhbujebqehjprrwfkoebcxxqfktayaaeheys";
 	string s3 = "babbbabbbaaabbababbbbababaabbabaabaaabbbbabbbaaabbbaaaaabbbbaabbaaabababbaaaaaabababbababaababbababbbababbbbaaaabaabbabbaaaaabbabbaaaabbbaabaaabaababaababbaaabbbbbabbbbaabbabaabbbbabaaabbababbabbabbab";
-	vector<int> v4 = { 4,5,6,0,0,0 };
-	vector<int> v5 = { 2,2,2,3 };
-	recoverTree(t1);
+	vector<int> v4 = { 1,7,6,4,3,1,7 };
+	vector<vector<int>> v5 = { {2},{3,4},{6,5,7},{4,1,8,3} };
+	int result = maxProfit2(v4);
     std::cout << "Hello World!\n"; 
 }
 
