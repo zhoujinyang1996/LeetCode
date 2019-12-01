@@ -11,6 +11,9 @@
 #include <map>
 using namespace std;
 
+vector<vector<int>> result;
+vector<vector<string>> result1;
+
 struct ListNode {
 	int val;
 	ListNode *next;
@@ -1599,7 +1602,6 @@ string countAndSay(int n) {
 	return result;
 }
 
-vector<vector<int>> result;
 void diguiCombinationSum(vector<int>& candidates, int size, int target, vector<int> tmpResult) {
 	int max = tmpResult.back();
 	for (int i = 0; i < size; i++)
@@ -2002,7 +2004,6 @@ double myPow(double x, long long n) {
 	return 1.0;
 }
 
-vector<vector<string>> result1;
 void huisuSolveNQueues(vector<vector<bool>> v, vector<string> oneResult, int line, int col, int n)
 {
 	if (v[line][col])
@@ -4813,6 +4814,7 @@ int minimumTotal(vector<vector<int>>& triangle) {
 	return minimumTotal(triangle);
 }
 
+//一次买卖
 int maxProfit(vector<int>& prices) {
 	int size = prices.size();
 	if (size == 0 || size == 1)
@@ -4838,6 +4840,7 @@ int maxProfit(vector<int>& prices) {
 	return maxProfit;
 }
 
+//不限次数
 int maxProfit2(vector<int>& prices) {
 	//int size = prices.size();
 	//if (size == 0 || size == 1)
@@ -4900,30 +4903,367 @@ int maxProfit2(vector<int>& prices) {
 	return result;
 }
 
+//最多两次，状态机解法
+int maxProfit3(vector<int>& prices) {
+	int size = prices.size();
+	if (size == 0)
+	{
+		return 0;
+	}
+	vector<vector<vector<int>>> dp(size, vector<vector<int>>(3, vector<int>(2)));
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 1; j <= 2; j++)
+		{
+			if (i == 0)
+			{
+				dp[i][j][0] = 0;
+				dp[i][j][1] = -prices[i];
+				continue;
+			}
+			dp[i][j][0] = max(dp[i - 1][j][0], dp[i - 1][j][1] + prices[i]);
+			dp[i][j][1] = max(dp[i - 1][j][1], dp[i - 1][j - 1][0] - prices[i]);
+		}
+	}
+	return dp[size - 1][2][0];
+}
 
+//curMax为目前为止的最大值
+int diguiMaxPathSum(TreeNode* root, int &curMax)
+{
+	if (root == NULL)
+	{
+		return 0;
+	}
+	int val = root->val;
+	int left = diguiMaxPathSum(root->left, curMax);
+	int right = diguiMaxPathSum(root->right, curMax);
+	int res = max(max(left, right), 0) + val;	//当前点加较长子串的长度
+	int ret = val + max(0, left) + max(0, right);//当前点加两个子串的长度
+	curMax = max(curMax, max(ret, res));
+	return res;
+}
+int maxPathSum(TreeNode* root) {
+	int res = INT_MIN;
+	diguiMaxPathSum(root, res);
+	return res;
+}
+
+bool isPalindrome(string s) {
+	int size = s.size();
+	int pre = 0;
+	int bot = size - 1;
+	while (pre <= bot)
+	{
+		char preC = s[pre];
+		while (preC < '0' || (preC<'A'&&preC>'9') || (preC<'a'&&preC>'Z') || preC>'z')
+		{
+			pre++;
+			if (pre > bot)
+			{
+				return true;
+			}
+			preC = s[pre];
+		}
+		char botC = s[bot];
+		while (botC < '0' || (botC<'A'&&botC>'9') || (botC<'a'&&botC>'Z') || botC>'z')
+		{
+			bot--;
+			if (bot < pre)
+			{
+				return true;
+			}
+			botC = s[bot];
+		}
+		if (preC != botC)
+		{
+			if (preC >= 'a'|| botC >= 'a')
+			{
+				if (botC + 32 == preC || preC + 32 == botC)
+				{
+					pre++;
+					bot--;
+					continue;
+				}
+			}
+			return false;
+		}
+		pre++;
+		bot--;
+	}
+	return true;
+}
+
+void diguiFindLadders(string beginWord, string endWord, map<string,vector<string>>& nearWords, vector<string> tmp, int &size)
+{
+	tmp.push_back(beginWord);
+	if (beginWord == endWord)
+	{
+		if (tmp.size() <= size)
+		{
+			size = tmp.size();
+			result1.push_back(tmp);
+		}
+		return;
+	}
+	vector<string> near = nearWords[beginWord];
+	for (auto it = near.begin(); it != near.end(); it++)
+	{
+		auto iter = find(tmp.begin(), tmp.end(), *it);
+		if(iter!=tmp.end())
+		{
+			continue;
+		}
+		diguiFindLadders(*it, endWord, nearWords, tmp, size);
+	}
+}
+vector<string> SearchNearWord(string word, vector<string> wordList)
+{
+	vector<string> res;
+	int size = word.size();
+	for (auto it = wordList.begin(); it != wordList.end(); it++)
+	{
+		bool b = false;
+		for (int i = 0; i < size; i++)
+		{
+			if (word[i] != (*it)[i])
+			{
+				if (b)
+				{
+					b = false;
+					break;
+				}
+				b = true;
+			}
+		}
+		if (!b)
+		{
+			continue;
+		}
+		res.push_back(*it);
+	}
+	return res;
+}
+vector<vector<string>> findLadders(string beginWord, string endWord, vector<string>& wordList) {
+	int size = wordList.size() + 1;
+	map<string, vector<string>> nearWords;
+	vector<string> tmp;
+	vector<string> near = SearchNearWord(beginWord, wordList);
+	nearWords.insert({ beginWord,near });
+	for (auto it = wordList.begin(); it != wordList.end(); it++)
+	{
+		if (*it == endWord)
+		{
+			continue;
+		}
+		vector<string> near = SearchNearWord(*it, wordList);
+		nearWords.insert({ *it,near });
+	}
+	diguiFindLadders(beginWord, endWord, nearWords, tmp, size);
+	for (auto it = result1.begin(); it != result1.end();)
+	{
+		if ((*it).size() > size)
+		{
+			it = result1.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+	return result1;
+}
+
+bool check(vector<vector<int>>& dp)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		if (dp[0][i] != 0 && dp[1][i] == dp[0][i] && dp[2][i] == dp[0][i])
+		{
+			return true;
+		}
+		if (dp[i][0] != 0 && dp[i][1] == dp[i][0] && dp[i][2] == dp[i][0])
+		{
+			return true;
+		}
+	}
+	if (dp[0][0] != 0 && dp[1][1] == dp[0][0] && dp[2][2] == dp[0][0])
+	{
+		return true;
+	}
+	if (dp[2][0] != 0 && dp[1][1] == dp[2][0] && dp[0][2] == dp[1][1])
+	{
+		return true;
+	}
+	return false;
+}
+string tictactoe(vector<vector<int>>& moves) {
+	vector<vector<int>> dp(3, vector<int>(3, 0));
+	int size = moves.size();
+	if (size < 5)
+	{
+		return "Pending";
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		int x = moves[i][0];
+		int y = moves[i][1];
+		if (i % 2)
+		{
+			dp[x][y] = 1;
+		}
+		else
+		{
+			dp[x][y] = 2;
+		}
+	}
+	for (int i = 4; i < moves.size(); i++)
+	{
+		int x = moves[i][0];
+		int y = moves[i][1];
+		if (i % 2)
+		{
+			dp[x][y] = 1;
+			if (check(dp))
+			{
+				return "A";
+			}
+		}
+		else
+		{
+			dp[x][y] = 2;
+			if (check(dp))
+			{
+				return "B";
+			}
+		}
+	}
+	if (size == 9)
+	{
+		return "Draw";
+	}
+	return "Pending";
+}
+
+int countSquares(vector<vector<int>>& matrix) {
+	int xSize = matrix.size();
+	int ySize = matrix[0].size();
+	for (int i = 0; i < xSize; i++)
+	{
+		for (int j = 0; j < ySize; j++)
+		{
+			if (matrix[i][j] != 0)
+			{
+				if (j - 1 >= 0)
+				{
+					matrix[i][j] = matrix[i][j - 1] + 1;
+				}
+				else
+				{
+					matrix[i][j] = 1;
+				}
+			}
+		}
+	}
+	int result = 0;
+	for (int i = 0; i < xSize; i++)
+	{
+		for (int j = 0; j < ySize; j++)
+		{
+			int tmp = matrix[i][j];
+			if (tmp == 1)
+			{
+				result++;
+			}
+			else if (tmp > 1)
+			{
+				result++;
+				for (int k = 1; k < tmp; k++)
+				{
+					if (i - k >= 0)
+					{
+						if (matrix[i-k][j] >= k + 1)
+						{
+							result++;
+							tmp = min(matrix[i-k][j], tmp);
+						}
+						else
+						{
+							break;
+						}
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+		}
+	}
+	return result;
+}
+
+int palindromePartition(string s, int k) {
+	int n = s.size();
+	vector<vector<int>> c(n, vector<int>(n));
+
+	auto go = [&](int x, int y)
+	{
+		int ret = 0;
+		while (x <= y)
+		{
+			if (s[x] != s[y]) ret++;
+			x++;
+			y--;
+		}
+		return ret;
+	};
+
+	for (int i = 0; i < n; ++i)
+	{
+		for (int j = i; j < n; ++j)
+		{
+			c[i][j] = go(i, j);
+		}
+	}
+	const int INF = 1000000000;
+	vector<vector<int>> f(n + 1, vector<int>(n + 1, INF));
+	f[0][0] = 0;
+	for (int i = 1; i <= n; ++i)
+	{
+		for (int j = 1; j <= k; ++j)
+		{
+			for (int x = 0; x < i; ++x)
+			{
+				f[i][j] = min(f[i][j], f[x][j - 1] + c[x][i - 1]);
+			}
+		}
+	}
+	return f[n][k];
+}
 
 int main()
 {
-	ListNode* n1 = new ListNode(1);
-	ListNode* n2 = new ListNode(2);
-	ListNode* n3 = new ListNode(3);
-	ListNode* n4 = new ListNode(4);
-	ListNode* n5 = new ListNode(5);
+	ListNode* n1 = new ListNode(-10);
+	ListNode* n2 = new ListNode(9);
+	ListNode* n3 = new ListNode(20);
+	ListNode* n4 = new ListNode(15);
+	ListNode* n5 = new ListNode(7);
 	ListNode* n6 = new ListNode(6);
 	ListNode* n7 = new ListNode(7);
 
-	//n1->next = n2;
-	//n2->next = n3;
+	n1->next = n2;
+	n1->next = n3;
 	n3->next = n4;
 	n4->next = n5;
 	//n5->next = n6;
 	//n6->next = n7;
 
-	Node* t1 = new Node(2);
-	Node* t2 = new Node(1);
-	Node* t3 = new Node(3);
-	Node* t4 = new Node(0);
-	Node* t5 = new Node(7);
+	TreeNode* t1 = new TreeNode(-10);
+	TreeNode* t2 = new TreeNode(9);
+	TreeNode* t3 = new TreeNode(20);
+	TreeNode* t4 = new TreeNode(15);
+	TreeNode* t5 = new TreeNode(7);
 	Node* t6 = new Node(9);
 	Node* t7 = new Node(1);
 	Node* t8 = new Node(2);
@@ -4931,15 +5271,16 @@ int main()
 	Node* t10 = new Node(0);
 	Node* t11 = new Node(8);
 	Node* t12 = new Node(8);
+
 	t1->left = t2;
 	t1->right = t3;
-	t2->left = t4;
-	t2->right = t5;
-	t3->left = t6;
-	t3->right = t7;
-	t4->left = t8;
-	t5->left = t9;
-	t5->right = t10;
+	//t2->left = t4;
+	//t2->right = t5;
+	t3->left = t4;
+	t3->right = t5;
+	//t4->left = t8;
+	//t5->left = t9;
+	//t5->right = t10;
 	t7->left = t11;
 	t7->right = t12;
 
@@ -4962,9 +5303,10 @@ int main()
 	string s1 = "xslledayhxhadmctrliaxqpokyezcfhzaskeykchkmhpyjipxtsuljkwkovmvelvwxzwieeuqnjozrfwmzsylcwvsthnxujvrkszqwtglewkycikdaiocglwzukwovsghkhyidevhbgffoqkpabthmqihcfxxzdejletqjoxmwftlxfcxgxgvpperwbqvhxgsbbkmphyomtbjzdjhcrcsggleiczpbfjcgtpycpmrjnckslrwduqlccqmgrdhxolfjafmsrfdghnatexyanldrdpxvvgujsztuffoymrfteholgonuaqndinadtumnuhkboyzaqguwqijwxxszngextfcozpetyownmyneehdwqmtpjloztswmzzdzqhuoxrblppqvyvsqhnhryvqsqogpnlqfulurexdtovqpqkfxxnqykgscxaskmksivoazlducanrqxynxlgvwonalpsyddqmaemcrrwvrjmjjnygyebwtqxehrclwsxzylbqexnxjcgspeynlbmetlkacnnbhmaizbadynajpibepbuacggxrqavfnwpcwxbzxfymhjcslghmajrirqzjqxpgtgisfjreqrqabssobbadmtmdknmakdigjqyqcruujlwmfoagrckdwyiglviyyrekjealvvigiesnvuumxgsveadrxlpwetioxibtdjblowblqvzpbrmhupyrdophjxvhgzclidzybajuxllacyhyphssvhcffxonysahvzhzbttyeeyiefhunbokiqrpqfcoxdxvefugapeevdoakxwzykmhbdytjbhigffkmbqmqxsoaiomgmmgwapzdosorcxxhejvgajyzdmzlcntqbapbpofdjtulstuzdrffafedufqwsknumcxbschdybosxkrabyfdejgyozwillcxpcaiehlelczioskqtptzaczobvyojdlyflilvwqgyrqmjaeepydrcchfyftjighntqzoo";
 	string s2 = "rwmimatmhydhbujebqehjprrwfkoebcxxqfktayaaeheys";
 	string s3 = "babbbabbbaaabbababbbbababaabbabaabaaabbbbabbbaaabbbaaaaabbbbaabbaaabababbaaaaaabababbababaababbababbbababbbbaaaabaabbabbaaaaabbabbaaaabbbaabaaabaababaababbaaabbbbbabbbbaabbabaabbbbabaaabbababbabbabbab";
-	vector<int> v4 = { 1,7,6,4,3,1,7 };
-	vector<vector<int>> v5 = { {2},{3,4},{6,5,7},{4,1,8,3} };
-	int result = maxProfit2(v4);
+	vector<int> v4 = { 3,3,5,0,0,3,1,4 };
+	vector<vector<int>> v5 = { {0,1,1,1},{1,1,1,1},{0,1,1,1} };
+	vector<string> v6 = { "si","go","se","cm","so","ph","mt","db","mb","sb","kr","ln","tm","le","av","sm","ar","ci","ca","br","ti","ba","to","ra","fa","yo","ow","sn","ya","cr","po","fe","ho","ma","re","or","rn","au","ur","rh","sr","tc","lt","lo","as","fr","nb","yb","if","pb","ge","th","pm","rb","sh","co","ga","li","ha","hz","no","bi","di","hi","qa","pi","os","uh","wm","an","me","mo","na","la","st","er","sc","ne","mn","mi","am","ex","pt","io","be","fm","ta","tb","ni","mr","pa","he","lr","sq","ye" };
+	int result = countSquares(v5);
     std::cout << "Hello World!\n"; 
 }
 
