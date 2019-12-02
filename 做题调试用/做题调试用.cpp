@@ -9,6 +9,8 @@
 #include <math.h>
 #include<algorithm>
 #include <map>
+#include <unordered_map>
+#include <queue>
 using namespace std;
 
 vector<vector<int>> result;
@@ -27,19 +29,32 @@ struct TreeNode {
 	TreeNode(int x) : val(x), left(NULL), right(NULL) {}
 };
 
+class Node1 {
+public:
+	int val;
+	Node1* left;
+	Node1* right;
+	Node1* next;
+
+	Node1() : val(0), left(NULL), right(NULL), next(NULL) {}
+
+	Node1(int _val) : val(_val), left(NULL), right(NULL), next(NULL) {}
+
+	Node1(int _val, Node1* _left, Node1* _right, Node1* _next)
+		: val(_val), left(_left), right(_right), next(_next) {}
+};
+
 class Node {
 public:
 	int val;
-	Node* left;
-	Node* right;
-	Node* next;
+	vector<Node*> neighbors;
 
-	Node() : val(0), left(NULL), right(NULL), next(NULL) {}
+	Node() {}
 
-	Node(int _val) : val(_val), left(NULL), right(NULL), next(NULL) {}
-
-	Node(int _val, Node* _left, Node* _right, Node* _next)
-		: val(_val), left(_left), right(_right), next(_next) {}
+	Node(int _val, vector<Node*> _neighbors) {
+		val = _val;
+		neighbors = _neighbors;
+	}
 };
 
 double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
@@ -4642,7 +4657,7 @@ int numDistinct(string s, string t) {
 	return dp[tSize][sSize];
 }
 
-Node* connect(Node* root) {
+Node1* connect(Node1* root) {
 	//if (root == NULL || root->left == NULL)
 	//{
 	//	return root;
@@ -4682,13 +4697,13 @@ Node* connect(Node* root) {
 	return root;
 }
 
-Node* connect2(Node* root) {
+Node1* connect2(Node1* root) {
 	if (root == NULL)
 	{
 		return NULL;
 	}
-	Node* cur = root;
-	Node* searchNode = NULL;
+	Node1* cur = root;
+	Node1* searchNode = NULL;
 	while (cur != NULL)
 	{
 		if (cur->left != NULL)
@@ -5242,48 +5257,440 @@ int palindromePartition(string s, int k) {
 	return f[n][k];
 }
 
+int ladderLength(string beginWord, string endWord, vector<string>& wordList) {
+	map<string, vector<string>> nearWords;
+	map<string, bool> f;
+	vector<string> tmp;
+	vector<string> near = SearchNearWord(beginWord, wordList);
+	nearWords.insert({ beginWord,near });
+	f.insert({ beginWord,false });
+	for (auto it = wordList.begin(); it != wordList.end(); it++)
+	{
+		f.insert({ *it,false });
+		if (*it == endWord)
+		{
+			continue;
+		}
+		vector<string> near = SearchNearWord(*it, wordList);
+		nearWords.insert({ *it,near });
+	}
+	list<string> tmpList;
+	tmpList.push_back(beginWord);
+	int size = 0;
+	while (!tmpList.empty())
+	{
+		list<string> tt;
+		size++;
+		for (auto it = tmpList.begin(); it != tmpList.end(); it++)
+		{
+			string s = *it;
+			if (s == endWord)
+			{
+				return size;
+			}
+			f[s] = true;
+			vector<string> near = nearWords[*it];
+			for (auto iter = near.begin(); iter != near.end(); iter++)
+			{
+				if (!f[*iter])
+				{
+					tt.push_back(*iter);
+				}
+			}
+		}
+		tmpList = tt;
+	}
+	return 0;
+}
+
+//双向BFS
+int ladderLength2(string beginWord, string endWord, vector<string>& wordList) {
+	unordered_map<string, int> freqs;
+	for (const auto &word : wordList)
+		freqs[word] = 0;
+	if (freqs.count(endWord) == 0) return 0;
+	queue<string> q1({ beginWord }), q2({ endWord });
+	int step = 1;
+	for (freqs[beginWord] |= 1, freqs[endWord] |= 2; q1.size() && q2.size(); ++step) {
+		bool first = q1.size() < q2.size();
+		queue<string> &q = first ? q1 : q2;
+		int flag = first ? 1 : 2;
+		for (int size = q.size(); size--; q.pop()) {
+			string &word = q.front();
+			if (freqs[word] == 3) return step;
+			for (int i = 0; i < word.length(); ++i) {
+				for (char ch = 'a'; ch <= 'z'; ++ch) {
+					string s = word;
+					if (s[i] == ch) continue;
+					s[i] = ch;
+					if (freqs.count(s) == 0 || freqs[s] & flag) continue;
+					freqs[s] |= flag;
+					q.push(s);
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+int longestConsecutive(vector<int>& nums) {
+	int size = nums.size();
+	if (size == 0)
+	{
+		return 0;
+	}
+	sort(nums.begin(), nums.end());
+	int result = 1;
+	int tmp = 1;
+	int pre = nums[0];
+	for (int i = 1; i < size; i++)
+	{
+		if (nums[i] == pre + 1)
+		{
+			tmp++;
+		}
+		else if (nums[i] != pre)
+		{
+			tmp = 1;
+			if (tmp > result)
+			{
+				result = tmp;
+			}
+		}
+		pre = nums[i];
+	}
+	return tmp > result ? tmp : result;
+
+	//非排序解法
+	//unordered_set<int> H(nums.begin(), nums.end());
+	//int ans = 0;
+	//for (auto x : nums) {
+	//	if (H.count(x - 1)) continue;
+	//	int a = x;
+	//	int b = 1;
+	//	while (H.count(a + 1)) {
+	//		a += 1;
+	//		b += 1;
+	//	}
+	//	ans = max(ans, b);
+	//}
+	//return ans;
+}
+
+int diguiNum(TreeNode* root, int num)
+{
+	num = num * 10 + root->val;
+	if (root->right != NULL && root->left != NULL)
+	{
+		return diguiNum(root->left, num) + diguiNum(root->right, num);
+	}
+	if (root->left == NULL)
+	{
+		if (root->right == NULL)
+		{
+			return num;
+		}
+		else
+		{
+			return diguiNum(root->right, num);
+		}
+	}
+	else
+	{
+		return diguiNum(root->left, num);
+	}
+}
+int sumNumbers(TreeNode* root) {
+	if (root == NULL)
+	{
+		return 0;
+	}
+	return diguiNum(root, 0);
+}
+
+void diguiSearchNearO(int i, int j, vector<vector<char>>& board, int& xSize, int& ySize)
+{
+	board[i][j] = '$';
+	if (i + 1 < xSize)
+	{
+		if (board[i + 1][j] == 'O')
+		{
+			diguiSearchNearO(i + 1, j, board, xSize, ySize);
+		}
+	}
+	if (i - 1 >= 0)
+	{
+		if (board[i - 1][j] == 'O')
+		{
+			diguiSearchNearO(i - 1, j, board, xSize, ySize);
+		}
+	}
+	if (j + 1 < ySize)
+	{
+		if (board[i][j + 1] == 'O')
+		{
+			diguiSearchNearO(i, j + 1, board, xSize, ySize);
+		}
+	}
+	if (j - 1 >= 0)
+	{
+		if (board[i][j - 1] == 'O')
+		{
+			diguiSearchNearO(i, j - 1, board, xSize, ySize);
+		}
+	}
+}
+void solve(vector<vector<char>>& board) {
+	int xSize = board.size();
+	if (xSize == 0)
+	{
+		return;
+	}
+	int ySize = board[0].size();
+	for (int i = 0; i < xSize; i++)
+	{
+		if (board[i][0] == 'O')
+		{
+			diguiSearchNearO(i, 0, board, xSize, ySize);
+		}
+		if (board[i][ySize-1] == 'O')
+		{
+			diguiSearchNearO(i, ySize - 1, board, xSize, ySize);
+		}
+	}
+	for (int i = 0; i < ySize; i++)
+	{
+		if (board[0][i] == 'O')
+		{
+			diguiSearchNearO(0, i, board, xSize, ySize);
+		}
+		if (board[xSize - 1][i] == 'O')
+		{
+			diguiSearchNearO(xSize - 1, i, board, xSize, ySize);
+		}
+	}
+	for (int i = 0; i < xSize; i++)
+	{
+		for (int j = 0; j < ySize; j++)
+		{
+			if (board[i][j] == 'O')
+			{
+				board[i][j] = 'X';
+			}
+			else if (board[i][j] == '$')
+			{
+				board[i][j] = 'O';
+			}
+		}
+	}
+}
+
+void diguiPartition(vector<vector<bool>>& dp, int i, int j, vector<string> tmp, int size, string s)
+{
+	tmp.push_back(s.substr(i, j - i + 1));
+	if (j == size - 1)
+	{
+		result1.push_back(tmp);
+	}
+	for (int k = j + 1; k < size; k++)
+	{
+		if (dp[j + 1][k] == 1)
+		{
+			diguiPartition(dp, j + 1, k, tmp, size, s);
+		}
+	}
+}
+vector<vector<string>> partition(string s) {
+	int size = s.size();
+	//i，j之间的字符串是否是回文串
+	vector<vector<bool>> dp(size, vector<bool>(size, false));
+	auto go = [&](int x, int y)
+	{
+		int ret = 0;
+		while (x <= y)
+		{
+			if (s[x] != s[y]) return false;
+			x++;
+			y--;
+		}
+		return true;
+	};
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = i; j < size; j++)
+		{
+			dp[i][j] = go(i, j);
+		}
+	}
+	vector<string> tmp;
+	for (int i = 0; i < size; i++)
+	{
+		if (dp[0][i] == 1)
+		{
+			diguiPartition(dp, 0, i, tmp, size, s);
+		}
+	}
+	return result1;
+}
+
+int diguiMinCut(vector<vector<bool>>& dp, int i, int size, string s, map<int, int>& h)
+{
+	if (h.count(i))
+	{
+		return h[i];
+	}
+	if (dp[i][size - 1] == 1)
+	{
+		return 0;
+	}
+	int t = size;
+	for (int k = i; k < size; k++)
+	{
+		if (dp[i][k] == 1)
+		{
+			t = min(t, 1 + diguiMinCut(dp, k + 1, size, s, h));
+		}
+	}
+	h.insert({ i, t });
+	return t;
+}
+int minCut(string s) {
+	int size = s.size();
+	int res = size - 1;
+	//i，j之间的字符串是否是回文串
+	vector<vector<bool>> dp(size, vector<bool>(size, false));
+	auto go = [&](int x, int y)
+	{
+		int ret = 0;
+		while (x <= y)
+		{
+			if (s[x] != s[y]) return false;
+			x++;
+			y--;
+		}
+		return true;
+	};
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = i; j < size; j++)
+		{
+			dp[i][j] = go(i, j);
+		}
+	}
+	map<int, int> h;
+	return	diguiMinCut(dp, 0, size, s, h);
+}
+
+Node* diguiCloneGraph(Node* node, map<Node*, Node*>& m)
+{
+	Node* res = new Node();
+	res->val = node->val;
+	m.insert({ node,res });
+	vector<Node*> nei = node->neighbors;
+	for (auto it = nei.begin(); it != nei.end(); it++)
+	{
+		if (m.count(*it) == 0)
+		{
+			res->neighbors.push_back(diguiCloneGraph(*it, m));
+		}
+		else
+		{
+			res->neighbors.push_back(m[*it]);
+		}
+	}
+	return res;
+}
+Node* cloneGraph(Node* node) {
+	if (node == NULL)
+	{
+		return NULL;
+	}
+	map<Node*, Node*> m;
+	return diguiCloneGraph(node, m);
+}
+
+int canCompleteCircuit(vector<int>& gas, vector<int>& cost) {
+	int size = gas.size();
+	vector<int> tmp(size * 2 - 1, 0);
+	for (int i = 0; i < size; i++)
+	{
+		if (i != size - 1)
+		{
+			tmp[i + size] = gas[i] - cost[i];
+		}
+		tmp[i] = gas[i] - cost[i];
+	}
+	for (int i = 0; i < size; i++)
+	{
+		if (tmp[i] < 0)
+		{
+			continue;
+		}
+		int t = tmp[i];
+		int j = 1;
+		while (j < size)
+		{
+			t += tmp[i + j];
+			if (t < 0)
+			{
+				break;
+			}
+			j++;
+		}
+		if (t >= 0)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
 int main()
 {
-	ListNode* n1 = new ListNode(-10);
-	ListNode* n2 = new ListNode(9);
-	ListNode* n3 = new ListNode(20);
-	ListNode* n4 = new ListNode(15);
-	ListNode* n5 = new ListNode(7);
-	ListNode* n6 = new ListNode(6);
-	ListNode* n7 = new ListNode(7);
+	ListNode* l1 = new ListNode(-10);
+	ListNode* l2 = new ListNode(9);
+	ListNode* l3 = new ListNode(20);
+	ListNode* l4 = new ListNode(15);
+	ListNode* l5 = new ListNode(7);
+	ListNode* l6 = new ListNode(6);
+	ListNode* l7 = new ListNode(7);
 
-	n1->next = n2;
-	n1->next = n3;
-	n3->next = n4;
-	n4->next = n5;
+	l1->next = l2;
+	l1->next = l3;
+	l3->next = l4;
+	l4->next = l5;
 	//n5->next = n6;
 	//n6->next = n7;
 
-	TreeNode* t1 = new TreeNode(-10);
+	TreeNode* t1 = new TreeNode(4);
 	TreeNode* t2 = new TreeNode(9);
-	TreeNode* t3 = new TreeNode(20);
-	TreeNode* t4 = new TreeNode(15);
-	TreeNode* t5 = new TreeNode(7);
-	Node* t6 = new Node(9);
-	Node* t7 = new Node(1);
-	Node* t8 = new Node(2);
-	Node* t9 = new Node(1);
-	Node* t10 = new Node(0);
-	Node* t11 = new Node(8);
-	Node* t12 = new Node(8);
+	TreeNode* t3 = new TreeNode(0);
+	TreeNode* t4 = new TreeNode(5);
+	TreeNode* t5 = new TreeNode(1);
+	TreeNode* t6 = new TreeNode(0);
 
 	t1->left = t2;
 	t1->right = t3;
-	//t2->left = t4;
-	//t2->right = t5;
-	t3->left = t4;
-	t3->right = t5;
-	//t4->left = t8;
-	//t5->left = t9;
-	//t5->right = t10;
-	t7->left = t11;
-	t7->right = t12;
+	t2->left = t4;
+	t2->right = t5;
+	//t3->left = t4;
+	t3->right = t6;
 
+	Node* n1 = new Node();
+	Node* n2 = new Node();
+	Node* n3 = new Node();
+	Node* n4 = new Node();
+	Node* n5 = new Node();
+	Node* n6 = new Node();
+
+	n1->val = 1;
+	n1->neighbors = { n2,n4 };
+	n2->val = 2;
+	n2->neighbors = { n1,n3 };
+	n3->val = 3;
+	n3->neighbors = { n2,n4 };
+	n4->val = 4;
+	n4->neighbors = { n1,n3 };
 
 	vector<vector<char>> v = { {'5', '3', '.', '.', '7', '.', '.', '.', '.'},
 		{'6', '.', '.', '1', '9', '5', '.', '.', '.'},
@@ -5303,10 +5710,12 @@ int main()
 	string s1 = "xslledayhxhadmctrliaxqpokyezcfhzaskeykchkmhpyjipxtsuljkwkovmvelvwxzwieeuqnjozrfwmzsylcwvsthnxujvrkszqwtglewkycikdaiocglwzukwovsghkhyidevhbgffoqkpabthmqihcfxxzdejletqjoxmwftlxfcxgxgvpperwbqvhxgsbbkmphyomtbjzdjhcrcsggleiczpbfjcgtpycpmrjnckslrwduqlccqmgrdhxolfjafmsrfdghnatexyanldrdpxvvgujsztuffoymrfteholgonuaqndinadtumnuhkboyzaqguwqijwxxszngextfcozpetyownmyneehdwqmtpjloztswmzzdzqhuoxrblppqvyvsqhnhryvqsqogpnlqfulurexdtovqpqkfxxnqykgscxaskmksivoazlducanrqxynxlgvwonalpsyddqmaemcrrwvrjmjjnygyebwtqxehrclwsxzylbqexnxjcgspeynlbmetlkacnnbhmaizbadynajpibepbuacggxrqavfnwpcwxbzxfymhjcslghmajrirqzjqxpgtgisfjreqrqabssobbadmtmdknmakdigjqyqcruujlwmfoagrckdwyiglviyyrekjealvvigiesnvuumxgsveadrxlpwetioxibtdjblowblqvzpbrmhupyrdophjxvhgzclidzybajuxllacyhyphssvhcffxonysahvzhzbttyeeyiefhunbokiqrpqfcoxdxvefugapeevdoakxwzykmhbdytjbhigffkmbqmqxsoaiomgmmgwapzdosorcxxhejvgajyzdmzlcntqbapbpofdjtulstuzdrffafedufqwsknumcxbschdybosxkrabyfdejgyozwillcxpcaiehlelczioskqtptzaczobvyojdlyflilvwqgyrqmjaeepydrcchfyftjighntqzoo";
 	string s2 = "rwmimatmhydhbujebqehjprrwfkoebcxxqfktayaaeheys";
 	string s3 = "babbbabbbaaabbababbbbababaabbabaabaaabbbbabbbaaabbbaaaaabbbbaabbaaabababbaaaaaabababbababaababbababbbababbbbaaaabaabbabbaaaaabbabbaaaabbbaabaaabaababaababbaaabbbbbabbbbaabbabaabbbbabaaabbababbabbabbab";
-	vector<int> v4 = { 3,3,5,0,0,3,1,4 };
+	vector<int> v4 = { 4,5,2,6,5,3 };
+	vector<int> v1 = { 3,2,7,3,2,9 };
 	vector<vector<int>> v5 = { {0,1,1,1},{1,1,1,1},{0,1,1,1} };
-	vector<string> v6 = { "si","go","se","cm","so","ph","mt","db","mb","sb","kr","ln","tm","le","av","sm","ar","ci","ca","br","ti","ba","to","ra","fa","yo","ow","sn","ya","cr","po","fe","ho","ma","re","or","rn","au","ur","rh","sr","tc","lt","lo","as","fr","nb","yb","if","pb","ge","th","pm","rb","sh","co","ga","li","ha","hz","no","bi","di","hi","qa","pi","os","uh","wm","an","me","mo","na","la","st","er","sc","ne","mn","mi","am","ex","pt","io","be","fm","ta","tb","ni","mr","pa","he","lr","sq","ye" };
-	int result = countSquares(v5);
+	vector<string> v6 = { "hot","dot","dog","lot","log" };
+	//vector<string> v6 = { "si","go","se","cm","so","ph","mt","db","mb","sb","kr","ln","tm","le","av","sm","ar","ci","ca","br","ti","ba","to","ra","fa","yo","ow","sn","ya","cr","po","fe","ho","ma","re","or","rn","au","ur","rh","sr","tc","lt","lo","as","fr","nb","yb","if","pb","ge","th","pm","rb","sh","co","ga","li","ha","hz","no","bi","di","hi","qa","pi","os","uh","wm","an","me","mo","na","la","st","er","sc","ne","mn","mi","am","ex","pt","io","be","fm","ta","tb","ni","mr","pa","he","lr","sq","ye" };
+	int result = canCompleteCircuit(v4,v1);
     std::cout << "Hello World!\n"; 
 }
 
