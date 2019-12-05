@@ -10,7 +10,9 @@
 #include<algorithm>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <queue>
+#include <regex>
 using namespace std;
 
 vector<vector<int>> result;
@@ -54,6 +56,21 @@ public:
 	Node(int _val, vector<Node*> _neighbors) {
 		val = _val;
 		neighbors = _neighbors;
+	}
+};
+
+class Node2 {
+public:
+	int val;
+	Node2* next;
+	Node2* random;
+
+	Node2() {}
+
+	Node2(int _val, Node2* _next, Node2* _random) {
+		val = _val;
+		next = _next;
+		random = _random;
 	}
 };
 
@@ -5645,6 +5662,918 @@ int canCompleteCircuit(vector<int>& gas, vector<int>& cost) {
 	return -1;
 }
 
+int candy(vector<int>& ratings) {
+	int size = ratings.size();
+	if (size == 0)
+	{
+		return 0;
+	}
+	vector<int> left(size, 1);
+	vector<int> right(size, 1);
+	int pre = ratings[0];
+	for (int i = 1; i < size; i++)
+	{
+		if (ratings[i] > pre)
+		{
+			left[i] = left[i - 1] + 1;
+		}
+		pre = ratings[i];
+	}
+	for (int i = size - 2; i >= 0; i--)
+	{
+		if (ratings[i] > pre)
+		{
+			right[i] = right[i + 1] + 1;
+		}
+		pre = ratings[i];
+	}
+	int result = 0;
+	for (int i = 0; i < size; i++)
+	{
+		result += max(left[i], right[i]);
+	}
+	return result;
+}
+
+int singleNumber(vector<int>& nums) {
+	for (int i = 1; i < nums.size(); i++)
+	{
+		nums[i] = (nums[i - 1] ^ nums[i]);
+	}
+	return nums.back();
+}
+
+int singleNumber2(vector<int>& nums) {
+	/*unordered_map<int, int> m;
+	for (auto it = nums.begin(); it != nums.end(); it++)
+	{
+		if (m.count(*it))
+		{
+			m[*it]++;
+		}
+		else
+		{
+			m.insert({ *it,1 });
+		}
+	}
+	for (auto it = m.begin(); it != m.end(); it++)
+	{
+		if ((*it).second == 1)
+		{
+			return (*it).first;
+		}
+	}
+	return 0;*/
+
+	//模拟无进位的三进制数相加
+	int once = 0;
+	int twice = 0;
+	for (auto it : nums)
+	{
+		once = once ^ it&~twice;
+		twice = twice ^ it&~once;
+	}
+	return once;
+}
+
+Node2* diguiCopyRandomList(Node2* head, map<Node2*, Node2*> &m)
+{
+	if (m.count(head))
+	{
+		return m[head];
+	}
+	Node2* res = new Node2();
+	res->val = head->val;
+	m.insert({ head, res });
+	if (head->next != NULL)
+	{
+		res->next = diguiCopyRandomList(head->next, m);
+	}
+	if (head->random != NULL)
+	{
+		res->random = diguiCopyRandomList(head->random, m);
+	}
+	return res;
+}
+Node2* copyRandomList(Node2* head) {
+	if (head == NULL)
+	{
+		return NULL;
+	}
+	map<Node2*, Node2*> m;
+	return diguiCopyRandomList(head, m);
+}
+
+bool huisuWordBreak(int start, string& s, unordered_set<string> &set, vector<bool> &dp)
+{
+	int size = s.size() - start;
+	if (size == 0)
+	{
+		return true;
+	}
+	for (int i = 1; i <= size; i++)
+	{
+		if (dp[start + i] == 1 && set.count(s.substr(start, i)))
+		{
+			if (huisuWordBreak(start + i, s, set, dp))
+			{
+				return true;
+			}
+			else
+			{
+				dp[start + i] = 0;
+			}
+		}
+	}
+	return false;
+}
+bool wordBreak(string s, vector<string>& wordDict) {
+	unordered_set<string> set;
+	for (auto it : wordDict)
+	{
+		set.insert(it);
+	}
+	vector<bool> dp(s.size() + 1, 1);		//第i位之后的数字是否匹配
+	return huisuWordBreak(0, s, set, dp);
+}
+
+vector<string> huisuWordBreak2(int start, string& s, unordered_set<string> &set, map<int, vector<string>> &dp)
+{
+	int size = s.size() - start;
+	vector<string> res;
+	for (int i = 1; i <= size; i++)
+	{
+		string tmp = s.substr(start, i);
+		if (set.count(tmp))
+		{
+			if (dp.count(start + i))
+			{
+				vector<string> v = dp[start + i];
+				for (auto it : v)
+				{
+					res.push_back(tmp + " " + it);
+				}
+				continue;
+			}
+			if (i == size)
+			{
+				res.push_back(tmp);
+			}
+			else
+			{
+				vector<string> v = huisuWordBreak2(start + i, s, set, dp);
+				dp.insert({ start + i, v });
+				for (auto it : v)
+				{
+					res.push_back(tmp + " " + it);
+				}
+			}
+		}
+	}
+	return res;
+}
+vector<string> wordBreak2(string s, vector<string>& wordDict) {
+	unordered_set<string> set;
+	for (auto it : wordDict)
+	{
+		set.insert(it);
+	}
+	string tmp;
+	map<int, vector<string>> dp;
+	return huisuWordBreak2(0, s, set, dp);
+}
+
+bool hasCycle(ListNode *head) {
+	//unordered_set<ListNode*> set;
+	//while (head != NULL)
+	//{
+	//	if (set.count(head))
+	//	{
+	//		return true;
+	//	}
+	//	set.insert(head);
+	//	head = head->next;
+	//}
+	//return false;
+
+	//双指针
+	if (head == NULL || head->next == NULL)
+	{
+		return false;
+	}
+	ListNode* fast = head->next;
+	ListNode* slow = head;
+	while (fast != slow)
+	{
+		if (fast == NULL || fast->next == NULL)
+		{
+			return false;
+		}
+		slow = slow->next;
+		fast = fast->next->next;
+	}
+	return true;
+}
+
+ListNode *detectCycle(ListNode *head) {
+	unordered_set<ListNode*> set;
+	while (head != NULL)
+	{
+		if (set.count(head))
+		{
+			return head;
+		}
+		set.insert(head);
+		head = head->next;
+	}
+	return NULL;
+}
+
+void reorderList(ListNode* head) {
+	if (head == NULL)
+	{
+		return;
+	}
+	vector<ListNode*> tmp;
+	while (head != NULL)
+	{
+		tmp.push_back(head);
+		head = head->next;
+	}
+	int i = 0;
+	int j = tmp.size() - 1;
+	while (i < j)
+	{
+		tmp[i]->next = tmp[j];
+		tmp[j]->next = tmp[i + 1];
+		i++;
+		j--;
+	}
+	tmp[i]->next = NULL;
+}
+
+void diguiPreorderTraversal(TreeNode *root, vector<int>& res)
+{
+	res.push_back(root->val);
+	if (root->left != NULL)
+	{
+		diguiPreorderTraversal(root->left, res);
+	}
+	if (root->right != NULL)
+	{
+		diguiPreorderTraversal(root->right, res);
+	}
+}
+TreeNode* getLeftMostRight(TreeNode* root) {
+	auto node = root->left;
+	while (node != NULL && node->right != NULL && node->right != root) {
+		node = node->right;
+	}
+	return node;
+}
+vector<int> preorderTraversal(TreeNode* root) {
+	//vector<int> res;
+	//if (root == NULL)
+	//{
+	//	return res;
+	//}
+	//diguiPreorderTraversal(root, res);
+	//return res;
+
+	//迭代法
+	/*vector<int> res;
+	if (root == NULL)
+	{
+		return res;
+	}
+	vector<TreeNode*> tmp;
+	tmp.push_back(root);
+	while (!tmp.empty())
+	{
+		TreeNode* t = tmp.back();
+		res.push_back(t->val);
+		tmp.pop_back();
+		if (t->right != NULL)
+		{
+			tmp.push_back(t->right);
+		}
+		if (t->left != NULL)
+		{
+			tmp.push_back(t->left);
+		}
+	}
+	return res;*/
+
+	//莫里斯遍历
+	vector<int> res;
+	while (root) {
+		if (root->left == NULL) {
+			res.push_back(root->val);
+			root = root->right;
+		}
+		else {
+			auto node = getLeftMostRight(root);
+			if (node->right == root) {
+				node->right = NULL;
+				root = root->right;
+			}
+			else {
+				res.push_back(root->val);
+				node->right = root;
+				root = root->left;
+			}
+		}
+	}
+	return res;
+}
+
+vector<int> postorderTraversal(TreeNode* root) {
+	vector<int> res;
+	if (root == NULL)
+	{
+		return res;
+	}
+	vector<TreeNode*> tmp;
+	tmp.push_back(root);
+	while (!tmp.empty())
+	{
+		TreeNode* t = tmp.back();
+		res.push_back(t->val);
+		tmp.pop_back();
+		if (t->left != NULL)
+		{
+			tmp.push_back(t->left);
+		}
+		if (t->right != NULL)
+		{
+			tmp.push_back(t->right);
+		}
+	}
+	reverse(res.begin(), res.end());
+	return res;
+}
+
+class LRUCache {
+public:
+	LRUCache(int capacity) : capacity_(capacity) {}
+
+	int get(int key) {
+		if (hash_.find(key) == hash_.end())
+			return -1;
+		else {
+			int value = hash_[key]->second;
+			ls_.erase(hash_[key]);
+			ls_.push_front(make_pair(key, value));
+			hash_[key] = ls_.begin();
+			return value;
+		}
+	}
+
+	void put(int key, int value) {
+		if (hash_.find(key) != hash_.end())
+			ls_.erase(hash_[key]);
+		else if (ls_.size() >= capacity_) {
+			hash_.erase(ls_.back().first);
+			ls_.pop_back();
+		}
+		ls_.push_front(make_pair(key, value));
+		hash_[key] = ls_.begin();
+	}
+
+private:
+	int capacity_;
+	list<pair<int, int>> ls_;
+	unordered_map<int, list<pair<int, int>>::iterator> hash_;
+};
+
+ListNode* insertionSortList(ListNode* head) {
+	if (head == NULL || head->next == NULL)
+	{
+		return head;
+	}
+	ListNode* res = head;
+	ListNode* ppre = head;
+	ListNode* pre = head->next;
+	while (pre != NULL)
+	{
+		ListNode* tmp = res;
+		ListNode* t = NULL;
+		while (pre->val >= tmp->val&&tmp != ppre)
+		{
+			t = tmp;
+			tmp = tmp->next;
+		}
+		if (tmp->val >= pre->val)
+		{
+			if (t == NULL)
+			{
+				res = pre;
+			}
+			else
+			{
+				t->next = pre;
+			}
+			ppre->next = pre->next;
+			pre->next = tmp;
+			pre = ppre->next;
+		}
+		else
+		{
+			ppre = pre;
+			pre = pre->next;
+		}
+	}
+	return res;
+}
+
+pair<int, int> calK(int x1, int y1, int x2, int y2)
+{
+	if (x1 == x2)
+	{
+		return { 0,1 };
+	}
+	if (y1 == y2)
+	{
+		return { 1,0 };
+	}
+	int a = x1 - x2;
+	int b = y1 - y2;
+	while (a != 0)
+	{
+		int temp = b % a;
+		b = a;
+		a = temp;
+	}
+	return { (x1 - x2) / b,(y1 - y2) / b };
+}
+int maxPoints(vector<vector<int>>& points) {
+	int size = points.size();
+	if (size == 0 || size == 1 || size == 2)
+	{
+		return size;
+	}
+	int result = 0;
+	for (int i = 0; i < size; i++)
+	{
+		map<pair<int, int>, int> m;
+		int num = 1;
+		for (int j = i + 1; j < size; j++)
+		{
+			if (points[i][0] == points[j][0] && points[i][1] == points[j][1])
+			{
+				num++;
+				continue;
+			}
+			pair<int,int> p = calK(points[i][0], points[i][1], points[j][0], points[j][1]);
+			if (m.count(p))
+			{
+				m[p]++;
+			}
+			else
+			{
+				m.insert({ p,1 });
+			}
+		}
+		int max = 0;
+		for (auto it = m.begin(); it != m.end(); it++)
+		{
+			if ((*it).second > max)
+			{
+				max = (*it).second;
+			}
+		}
+		max += num;
+		if (max > result)
+		{
+			result = max;
+		}
+	}
+	return result;
+}
+
+//逆波兰表达式求值
+int evalRPN(vector<string>& tokens) {
+	int size = tokens.size();
+	vector<int> num;
+	for (int i = 0; i < size; i++)
+	{
+		if ((tokens[i][0] >= '0'&&tokens[i][0] <= '9') || tokens[i].size() > 1)
+		{
+			num.push_back(stoi(tokens[i]));
+		}
+		else
+		{
+			int b = num.back();
+			num.pop_back();
+			int a = num.back();
+			num.pop_back();
+			if (tokens[i][0] == '/')
+			{
+				a /= b;
+				num.push_back(a);
+			}
+			else if (tokens[i][0] == '+')
+			{
+				a += b;
+				num.push_back(a);
+			}
+			else if (tokens[i][0] == '-')
+			{
+				a -= b;
+				num.push_back(a);
+			}
+			else if (tokens[i][0] == '*')
+			{
+				a *= b;
+				num.push_back(a);
+			}
+		}
+	}
+	return num.back();
+}
+
+string reverseWords(string s) {
+	int size = s.size();
+	vector<string> tmp;
+	for (int i = 0; i < size; i++)
+	{
+		while (i < size&& s[i] == ' ')
+		{
+			i++;
+		}
+		int pre = i;
+		while (i < size&&s[i] != ' ')
+		{
+			i++;
+		}
+		if (i > pre)
+		{
+			tmp.push_back(s.substr(pre, i - pre));
+		}
+	}
+	string res;
+	while (!tmp.empty())
+	{
+		string t = tmp.back();
+		tmp.pop_back();
+		res += t + " ";
+	}
+	res.pop_back();
+	return res;
+}
+
+int maxProduct(vector<int>& nums) {
+	//int size = nums.size();
+	//if (size == 1)
+	//{
+	//	return nums[0];
+	//}
+	//int firstNeg = -1;
+	//int lastNeg = -1;
+	//int lastZero = -1;
+	//int negNum = 0;
+	//int result = 0;
+	//for (int i = 0; i < size; i++)
+	//{
+	//	if (nums[i] == 0)
+	//	{
+	//		//全为正数
+	//		if (firstNeg == -1)
+	//		{
+	//			if (i - lastZero != 1)
+	//			{
+	//				int tmp = 1;
+	//				for (int j = lastZero + 1; j < i; j++)
+	//				{
+	//					tmp *= nums[j];
+	//				}
+	//				if (tmp > result)
+	//				{
+	//					result = tmp;
+	//				}
+	//			}
+	//		}
+	//		else
+	//		{
+	//			if (negNum % 2 == 0)
+	//			{
+	//				int tmp = 1;
+	//				for (int j = lastZero + 1; j < i; j++)
+	//				{
+	//					tmp *= nums[j];
+	//				}
+	//				if (tmp > result)
+	//				{
+	//					result = tmp;
+	//				}
+	//			}
+	//			else
+	//			{
+	//				if (firstNeg == lastNeg)
+	//				{
+	//					if (i - lastZero != 2)
+	//					{
+	//						int tmp = 1;
+	//						for (int j = lastZero + 1; j < firstNeg; j++)
+	//						{
+	//							tmp *= nums[j];
+	//						}
+	//						if (tmp > result)
+	//						{
+	//							result = tmp;
+	//						}
+	//						tmp = 1;
+	//						for (int j = firstNeg + 1; j < i; j++)
+	//						{
+	//							tmp *= nums[j];
+	//						}
+	//						if (tmp > result)
+	//						{
+	//							result = tmp;
+	//						}
+	//					}
+	//				}
+	//				else
+	//				{
+	//					int tmp = 1;
+	//					for (int j = lastZero + 1; j < lastNeg; j++)
+	//					{
+	//						tmp *= nums[j];
+	//					}
+	//					if (tmp > result)
+	//					{
+	//						result = tmp;
+	//					}
+	//					tmp = 1;
+	//					for (int j = firstNeg + 1; j < i; j++)
+	//					{
+	//						tmp *= nums[j];
+	//					}
+	//					if (tmp > result)
+	//					{
+	//						result = tmp;
+	//					}
+	//				}
+	//			}
+	//		}
+	//		lastZero = i;
+	//		lastNeg = -1;
+	//		firstNeg = -1;
+	//		negNum = 0;
+	//	}
+	//	else if (nums[i] < 0)
+	//	{
+	//		if (firstNeg == -1)
+	//		{
+	//			firstNeg = i;
+	//		}
+	//		lastNeg = i;
+	//		negNum++;
+	//	}
+	//}
+	//if (firstNeg == -1)
+	//{
+	//	if (size - lastZero != 1)
+	//	{
+	//		int tmp = 1;
+	//		for (int j = lastZero + 1; j < size; j++)
+	//		{
+	//			tmp *= nums[j];
+	//		}
+	//		if (tmp > result)
+	//		{
+	//			result = tmp;
+	//		}
+	//	}
+	//}
+	//else
+	//{
+	//	if (negNum % 2 == 0)
+	//	{
+	//		int tmp = 1;
+	//		for (int j = lastZero + 1; j < size; j++)
+	//		{
+	//			tmp *= nums[j];
+	//		}
+	//		if (tmp > result)
+	//		{
+	//			result = tmp;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		if (firstNeg == lastNeg)
+	//		{
+	//			if (size - lastZero == 2)
+	//			{
+	//				return result;
+	//			}
+	//			int tmp = 1;
+	//			for (int j = lastZero + 1; j < firstNeg; j++)
+	//			{
+	//				tmp *= nums[j];
+	//			}
+	//			if (tmp > result)
+	//			{
+	//				result = tmp;
+	//			}
+	//			tmp = 1;
+	//			for (int j = firstNeg + 1; j < size; j++)
+	//			{
+	//				tmp *= nums[j];
+	//			}
+	//			if (tmp > result)
+	//			{
+	//				result = tmp;
+	//			}
+	//		}
+	//		else
+	//		{
+	//			int tmp = 1;
+	//			for (int j = lastZero + 1; j < lastNeg; j++)
+	//			{
+	//				tmp *= nums[j];
+	//			}
+	//			if (tmp > result)
+	//			{
+	//				result = tmp;
+	//			}
+	//			tmp = 1;
+	//			for (int j = firstNeg + 1; j < size; j++)
+	//			{
+	//				tmp *= nums[j];
+	//			}
+	//			if (tmp > result)
+	//			{
+	//				result = tmp;
+	//			}
+	//		}
+	//	}
+	//}
+	//return result;
+
+//大神解法
+	int size = nums.size();
+	if (size == 1)
+	{
+		return nums[0];
+	}
+	int res = 0;
+	int imax = 1;
+	int imin = 1;
+	for (int i = 0; i < size; i++)
+	{
+		if (nums[i] < 0)
+		{
+			int tmp = imax;
+			imax = imin;
+			imin = tmp;
+		}
+		imax = max(imax*nums[i], nums[i]);
+		imin = min(imin*nums[i], nums[i]);
+		res = max(imax, res);
+	}
+	return res;
+}
+
+int findMin(vector<int>& nums) {
+	int size = nums.size();
+	if (size == 1)
+	{
+		return nums[0];
+	}
+	int left = 0;
+	int right = size - 1;
+	int min = nums[0];
+	while (left <= right)
+	{
+		int mid = (left + right) / 2;
+		//左侧有序，最小值在右边
+		if (nums[mid] >= nums[left])
+		{
+			if (nums[left] < min)
+			{
+				min = nums[left];
+			}
+			left = mid + 1;
+		}
+		else
+		{
+			if (nums[mid] < min)
+			{
+				min = nums[mid];
+			}
+			right = mid - 1;
+		}
+	}
+	return min;
+}
+
+int findMin1(vector<int>& nums) {
+	int size = nums.size();
+	if (size == 1)
+	{
+		return nums[0];
+	}
+	int left = 0;
+	int right = size - 1;
+	int min = nums[0];
+	while (left <= right)
+	{
+		int mid = (left + right) / 2;
+		//左侧有序，最小值在右边
+		if (nums[mid] >= nums[left])
+		{
+			if (nums[mid] == nums[right])
+			{
+				int min1 = nums[left];
+				int min2 = nums[right];
+				if (mid != left)
+				{
+					vector<int> tmp1(nums.begin() + left, nums.begin() + mid);
+					min1 = findMin1(tmp1);
+				}
+				if (mid != right)
+				{
+					vector<int> tmp2(nums.begin() + mid, nums.begin() + right);
+					min2 = findMin1(tmp2);
+				}
+				min = std::min(min, min2);
+				min = std::min(min, min1);
+				return min;
+			}
+			else
+			{
+				if (nums[left] < min)
+				{
+					min = nums[left];
+				}
+				left = mid + 1;
+			}
+		}
+		else
+		{
+			if (nums[mid] < min)
+			{
+				min = nums[mid];
+			}
+			right = mid - 1;
+		}
+	}
+	return min;
+}
+
+class MinStack {
+public:
+	/** initialize your data structure here. */
+	MinStack() {
+
+	}
+
+	void push(int x) {
+		val.push_back(x);
+		if (min.size() == 0 || min.back() > x)
+		{
+			min.push_back(x);
+		}
+	}
+
+	void pop() {
+		if (val.back() == min.back())
+		{
+			min.pop_back();
+		}
+		val.pop_back();
+	}
+
+	int top() {
+		return val.back();
+	}
+
+	int getMin() {
+		return min.back();
+	}
+private:
+	vector<int> val;
+	vector<int> min;
+};
+
+//检测两个链表是否相交
+ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+	if (headA == NULL || headB == NULL)
+	{
+		return NULL;
+	}
+	ListNode* pa = headA;
+	ListNode* pb = headB;
+	while (pa != pb)
+	{
+		pa = pa == NULL ? headB : pa->next;
+		pb = pb == NULL ? headA : pb->next;
+	}
+	return pa;
+}
+
 int main()
 {
 	ListNode* l1 = new ListNode(-10);
@@ -5662,19 +6591,20 @@ int main()
 	//n5->next = n6;
 	//n6->next = n7;
 
-	TreeNode* t1 = new TreeNode(4);
-	TreeNode* t2 = new TreeNode(9);
-	TreeNode* t3 = new TreeNode(0);
-	TreeNode* t4 = new TreeNode(5);
-	TreeNode* t5 = new TreeNode(1);
-	TreeNode* t6 = new TreeNode(0);
+	TreeNode* t1 = new TreeNode(1);
+	TreeNode* t2 = new TreeNode(2);
+	TreeNode* t3 = new TreeNode(3);
+	TreeNode* t4 = new TreeNode(4);
+	TreeNode* t5 = new TreeNode(5);
+	TreeNode* t6 = new TreeNode(6);
+	TreeNode* t7 = new TreeNode(7);
 
 	t1->left = t2;
 	t1->right = t3;
 	t2->left = t4;
 	t2->right = t5;
-	//t3->left = t4;
-	t3->right = t6;
+	t3->left = t6;
+	t4->left = t7;
 
 	Node* n1 = new Node();
 	Node* n2 = new Node();
@@ -5692,15 +6622,24 @@ int main()
 	n4->val = 4;
 	n4->neighbors = { n1,n3 };
 
+	Node2* n21 = new Node2();
+	Node2* n22 = new Node2();
+	n21->val = 1;
+	n21->next = n22;
+	n21->random = n22;
+	n22->val = 2;
+	n22->random = n22;
+
 	vector<vector<char>> v = { {'5', '3', '.', '.', '7', '.', '.', '.', '.'},
-		{'6', '.', '.', '1', '9', '5', '.', '.', '.'},
+		{'6', '.'
+		, '.', '1', '9', '5', '.', '.', '.'},
 		{'.', '9', '8', '.', '.', '.', '.', '6', '.'},
 		{'8', '.', '.', '.', '6', '.', '.', '.', '3'},
 		{'4', '.', '.', '8', '.', '3', '.', '.', '1'},
 		{'7', '.', '.', '.', '2', '.', '.', '.', '6'},
 		{'.', '6', '.', '.', '.', '.', '2', '8', '.'},
 		{'.', '.', '.', '4', '1', '9', '.', '.', '5'},
-		{'.', '.', '.', '.', '8', '.', '.', '7', '9'}};
+		{'.', '.', '.', '.', '8', '.', '.', '7', '9'} };
 
 	vector<vector<int>> obstacleGrid(50, vector<int>(50, 0));
 	vector<string> v2 = { "ask","not","what","your","country","can","do","for","you","ask","what","you","can","do","for","your","country" };
@@ -5710,12 +6649,12 @@ int main()
 	string s1 = "xslledayhxhadmctrliaxqpokyezcfhzaskeykchkmhpyjipxtsuljkwkovmvelvwxzwieeuqnjozrfwmzsylcwvsthnxujvrkszqwtglewkycikdaiocglwzukwovsghkhyidevhbgffoqkpabthmqihcfxxzdejletqjoxmwftlxfcxgxgvpperwbqvhxgsbbkmphyomtbjzdjhcrcsggleiczpbfjcgtpycpmrjnckslrwduqlccqmgrdhxolfjafmsrfdghnatexyanldrdpxvvgujsztuffoymrfteholgonuaqndinadtumnuhkboyzaqguwqijwxxszngextfcozpetyownmyneehdwqmtpjloztswmzzdzqhuoxrblppqvyvsqhnhryvqsqogpnlqfulurexdtovqpqkfxxnqykgscxaskmksivoazlducanrqxynxlgvwonalpsyddqmaemcrrwvrjmjjnygyebwtqxehrclwsxzylbqexnxjcgspeynlbmetlkacnnbhmaizbadynajpibepbuacggxrqavfnwpcwxbzxfymhjcslghmajrirqzjqxpgtgisfjreqrqabssobbadmtmdknmakdigjqyqcruujlwmfoagrckdwyiglviyyrekjealvvigiesnvuumxgsveadrxlpwetioxibtdjblowblqvzpbrmhupyrdophjxvhgzclidzybajuxllacyhyphssvhcffxonysahvzhzbttyeeyiefhunbokiqrpqfcoxdxvefugapeevdoakxwzykmhbdytjbhigffkmbqmqxsoaiomgmmgwapzdosorcxxhejvgajyzdmzlcntqbapbpofdjtulstuzdrffafedufqwsknumcxbschdybosxkrabyfdejgyozwillcxpcaiehlelczioskqtptzaczobvyojdlyflilvwqgyrqmjaeepydrcchfyftjighntqzoo";
 	string s2 = "rwmimatmhydhbujebqehjprrwfkoebcxxqfktayaaeheys";
 	string s3 = "babbbabbbaaabbababbbbababaabbabaabaaabbbbabbbaaabbbaaaaabbbbaabbaaabababbaaaaaabababbababaababbababbbababbbbaaaabaabbabbaaaaabbabbaaaabbbaabaaabaababaababbaaabbbbbabbbbaabbabaabbbbabaaabbababbabbabbab";
-	vector<int> v4 = { 4,5,2,6,5,3 };
-	vector<int> v1 = { 3,2,7,3,2,9 };
-	vector<vector<int>> v5 = { {0,1,1,1},{1,1,1,1},{0,1,1,1} };
-	vector<string> v6 = { "hot","dot","dog","lot","log" };
+	vector<int> v4 = { 1,3,5 };
+	vector<int> v1 = { 1,0,2,2,5,2,1,0 };
+	vector<vector<int>> v5 = { {1,1},{2,2},{3,3} };
+	vector<string> v6 = { "10","6","9","3","+","-11","*","/","*","17","+","5","+" };
 	//vector<string> v6 = { "si","go","se","cm","so","ph","mt","db","mb","sb","kr","ln","tm","le","av","sm","ar","ci","ca","br","ti","ba","to","ra","fa","yo","ow","sn","ya","cr","po","fe","ho","ma","re","or","rn","au","ur","rh","sr","tc","lt","lo","as","fr","nb","yb","if","pb","ge","th","pm","rb","sh","co","ga","li","ha","hz","no","bi","di","hi","qa","pi","os","uh","wm","an","me","mo","na","la","st","er","sc","ne","mn","mi","am","ex","pt","io","be","fm","ta","tb","ni","mr","pa","he","lr","sq","ye" };
-	int result = canCompleteCircuit(v4,v1);
+	int result = findMin1(v4);
     std::cout << "Hello World!\n"; 
 }
 
